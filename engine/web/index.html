@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SermonROAD</title>
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="css/gowun.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+  <nav id="side" aria-label="메뉴">
+    <a class="brand" href="#map" aria-label="SermonROAD 첫 화면">
+      <img src="icon.png" alt="" width="36" height="36">
+      <span class="logo">Sermon<em>ROAD</em></span>
+    </a>
+    <div id="nav"></div>
+    <div class="grow"></div>
+    <a class="nav-item" data-nav="settings" href="#settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>설정</a>
+    <button id="ver" class="ver" type="button"></button>
+  </nav>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+<div id="offline" hidden><div><b>잠시 연결이 끊겼어요</b><span>다시 이어지는 중…</span></div></div>
+<script src="js/core.js"></script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/records.js"></script>
+<script src="js/sermon.js"></script>
+<script src="js/series.js"></script>
+<script src="js/confess.js"></script>
+<script src="js/illus.js"></script>
+<script src="js/helper.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

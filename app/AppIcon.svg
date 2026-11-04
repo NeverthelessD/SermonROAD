@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- SermonROAD 앱 아이콘 D '말씀 위의 펜촉' — 펼친 성경 위에 내려앉은 펜촉, 펜촉의 십자가 줄기가 성경의 접힌 선으로 이어져요 -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3766"/><stop offset="1" stop-color="#151B36"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6DE9B"/><stop offset=".55" stop-color="#E2BE62"/><stop offset="1" stop-color="#B98A2E"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE7A6" stop-opacity=".85"/><stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/></radialGradient>
+    <radialGradient id="halo" cx=".5" cy=".45" r=".5"><stop offset="0" stop-color="#E2BE62" stop-opacity=".16"/><stop offset="1" stop-color="#E2BE62" stop-opacity="0"/></radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".32"/></filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  </g>
+  <g transform="translate(100 100) scale(8.24)">
+    <circle cx="50" cy="40" r="40" fill="url(#halo)"/>
+    <path d="M11 60 L11 86 C27 83 41 84 50 89.5 C59 84 73 83 89 86 L89 60 Z" fill="#B98A2E"/>
+    <path d="M50 62 C41 57 27 56 14.5 59 L14.5 83 C27 80 41 81 50 86 Z" fill="#F4EBD3"/>
+    <path d="M50 62 C59 57 73 56 85.5 59 L85.5 83 C73 80 59 81 50 86 Z" fill="#E6DABD"/>
+    <path d="M20 66 C27 64.6 35 64.8 43 66.6 M20 71.5 C27 70.1 35 70.3 43 72.1 M20 77 C27 75.6 35 75.8 43 77.6 M57 66.6 C65 64.8 73 64.6 80 66 M57 72.1 C65 70.3 73 70.1 80 71.5 M57 77.6 C65 75.8 73 75.6 80 77" stroke="#1E2747" stroke-width="1.2" stroke-linecap="round" fill="none" opacity=".25"/>
+    <path d="M50 62 V86" stroke="#9C7426" stroke-width="1.6"/>
+    <ellipse cx="50" cy="62.5" rx="9" ry="3.6" fill="url(#glow)"/>
+    <path d="M50 63 L35.5 39 C34 34.5 36.5 28.5 41 25.5 L41 18 L59 18 L59 25.5 C63.5 28.5 66 34.5 64.5 39 Z" fill="url(#gold)"/>
+    <rect x="38.5" y="11" width="23" height="6.2" rx="2" fill="url(#gold)"/>
+    <path d="M50 31 V62" stroke="#1B2347" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M44.6 37.4 H55.4" stroke="#1B2347" stroke-width="2.8" stroke-linecap="round"/>
+  </g>
+</svg>
