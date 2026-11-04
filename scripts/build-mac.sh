@@ -20,8 +20,14 @@ echo "▶ 앱 껍데기 빌드 (Swift)"
 xcrun swiftc --version
 xcrun swiftc -O -target arm64-apple-macos12.0 \
   -o "$APP/Contents/MacOS/SermonROAD" "$ROOT/app/shell/main.swift" \
-  -framework AppKit -framework WebKit -framework PDFKit -framework Vision
+  -framework AppKit -framework WebKit
 chmod 755 "$APP/Contents/MacOS/SermonROAD"
+
+echo "▶ 서재 PDF 글자 읽기 도구 (Swift, 앱과 따로 — Dock 에 나타나지 않아요)"
+xcrun swiftc -O -target arm64-apple-macos12.0 \
+  -o "$APP/Contents/Resources/sermonroad-pdftext" "$ROOT/app/pdftext/main.swift" \
+  -framework PDFKit -framework Vision -framework CoreGraphics
+chmod 755 "$APP/Contents/Resources/sermonroad-pdftext"
 
 sed "s/__VERSION__/$VERSION/g" "$ROOT/app/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist"

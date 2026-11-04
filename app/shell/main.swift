@@ -13,14 +13,11 @@
 //   3) Dock 아이콘을 누르면 창을 다시 보여 주고, 앱을 종료하면 엔진도 깔끔하게 끔
 //   4) 엔진이 끝나면 앱도 끝남 (화면의 '종료' 버튼) · 업데이트 후에는 새 버전을 다시 엶
 //   5) 모든 단계를 launcher.log 에 기록
-//   6) 서재 PDF 글자 읽기: 엔진이 `SermonROAD --pdf-text <PDF> <결과.json>` 으로 부르면
-//      PDFKit 으로 글자를 읽고, 글자가 없는 쪽(스캔 PDF)은 맥의 글자 인식(Vision)으로 읽어요. 창은 열지 않아요.
+//   (서재 PDF 글자 읽기는 앱과 따로 있는 작은 도구 Contents/Resources/sermonroad-pdftext 가 해요 — app/pdftext/main.swift)
 
 import AppKit
 import Darwin
-import PDFKit
 import UniformTypeIdentifiers
-import Vision
 import WebKit
 
 // MARK: - 경로 · 기록
@@ -206,92 +203,6 @@ final class Engine {
     static func randomToken() -> String {
         let chars = Array("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
         return String((0..<32).map { _ in chars[Int(arc4random_uniform(UInt32(chars.count)))] })
-    }
-}
-
-// MARK: - 서재 PDF 글자 읽기 (PDFKit + 글자 인식)
-
-enum PDFText {
-    /// 쪽마다 글자를 읽어 JSON({"pages": [...], "ocr": [쪽 번호…]})으로 저장해요.
-    /// 진행 상황은 표준 출력에 "PAGE 3/120" 처럼 한 줄씩 알려요 (엔진이 읽어서 화면에 보여 줘요).
-    static func run(_ src: String, _ out: String, ocr allowOCR: Bool) -> Int32 {
-        guard let doc = PDFDocument(url: URL(fileURLWithPath: src)) else {
-            FileHandle.standardError.write("PDF를 열지 못했어요\n".data(using: .utf8)!)
-            return 2
-        }
-        if doc.isLocked {
-            FileHandle.standardError.write("암호가 걸린 PDF예요\n".data(using: .utf8)!)
-            return 3
-        }
-        var pages: [String] = []
-        var ocrPages: [Int] = []
-        let n = doc.pageCount
-        for i in 0..<n {
-            autoreleasepool {
-                var text = ""
-                if let page = doc.page(at: i) {
-                    text = page.string ?? ""
-                    let meaningful = text.unicodeScalars.filter { CharacterSet.letters.contains($0) }.count
-                    if allowOCR && meaningful < 12, let t = recognize(page), !t.isEmpty {
-                        text = t
-                        ocrPages.append(i + 1)
-                    }
-                }
-                pages.append(text)
-            }
-            print("PAGE \(i + 1)/\(n)")
-            fflush(stdout)
-        }
-        let obj: [String: Any] = ["pages": pages, "ocr": ocrPages, "title": (doc.documentAttributes?[PDFDocumentAttribute.titleAttribute] as? String) ?? ""]
-        guard let data = try? JSONSerialization.data(withJSONObject: obj, options: []) else { return 4 }
-        do {
-            try data.write(to: URL(fileURLWithPath: out), options: .atomic)
-        } catch {
-            return 5
-        }
-        return 0
-    }
-
-    /// 글자가 없는 쪽(스캔한 책)을 그림으로 그려서 맥의 글자 인식으로 읽어요 (한국어 · 영어)
-    static func recognize(_ page: PDFPage) -> String? {
-        // 그리기는 AppKit 을 거치지 않는 CoreGraphics 로 (창 서버에 붙지 않아서 Dock 에 아이콘이 생기지 않아요)
-        guard let cgPage = page.pageRef else { return nil }
-        let box = cgPage.getBoxRect(.mediaBox)
-        let scale: CGFloat = 2.2
-        let w = Int(box.width * scale), h = Int(box.height * scale)
-        guard w > 10, h > 10, w < 12000, h < 12000,
-              let cs = CGColorSpace(name: CGColorSpace.sRGB),
-              let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: cs,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        ctx.setFillColor(CGColor(gray: 1, alpha: 1))
-        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
-        ctx.scaleBy(x: scale, y: scale)
-        ctx.translateBy(x: -box.origin.x, y: -box.origin.y)
-        ctx.drawPDFPage(cgPage)
-        guard let img = ctx.makeImage() else { return nil }
-        let req = VNRecognizeTextRequest()
-        req.recognitionLevel = .accurate
-        req.usesLanguageCorrection = true
-        if #available(macOS 13.0, *) {
-            req.revision = VNRecognizeTextRequestRevision3
-        }
-        let langs = ["ko-KR", "en-US"]
-        if let ok = try? req.supportedRecognitionLanguages() {
-            req.recognitionLanguages = langs.filter { ok.contains($0) }
-        }
-        let handler = VNImageRequestHandler(cgImage: img, options: [:])
-        do {
-            try handler.perform([req])
-        } catch {
-            return nil
-        }
-        let obs = req.results ?? []
-        // 위에서 아래로, 왼쪽에서 오른쪽으로 (Vision 좌표는 아래가 0)
-        let lines = obs.sorted { a, b in
-            if abs(a.boundingBox.midY - b.boundingBox.midY) > 0.008 { return a.boundingBox.midY > b.boundingBox.midY }
-            return a.boundingBox.minX < b.boundingBox.minX
-        }.compactMap { $0.topCandidates(1).first?.string }
-        return lines.joined(separator: "\n")
     }
 }
 
@@ -647,14 +558,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 }
 
 // MARK: - 시작
-
-// 엔진이 부르는 모드: SermonROAD --pdf-text <PDF> <결과.json> [--no-ocr]  (창을 열지 않고 끝나요)
-if let i = CommandLine.arguments.firstIndex(of: "--pdf-text"), CommandLine.arguments.count > i + 2 {
-    // 이 모드는 화면 없이 글자만 읽어요. 혹시 시스템이 앱으로 여겨도 Dock 에 나타나지 않게 해요.
-    NSApplication.shared.setActivationPolicy(.prohibited)
-    let noOCR = CommandLine.arguments.contains("--no-ocr")
-    exit(PDFText.run(CommandLine.arguments[i + 1], CommandLine.arguments[i + 2], ocr: !noOCR))
-}
 
 let app = NSApplication.shared
 let delegate = AppDelegate()

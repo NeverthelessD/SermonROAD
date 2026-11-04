@@ -18,7 +18,7 @@
       시안: Design 캔버스 'SermonROAD 디자인 시안' (claude.ai/artifact/N6naHkxm5iUY47TVanoVYt)
 - [x] 2. 저장소 뼈대 (CLAUDE.md, VERSION, .gitignore, app/shell, engine, scripts, CI)
 - [x] 3. 엔진(Go): data.json 저장 · 자동 백업 · 휴지통, 본문 해석(bible.go, 시험 있음), 첨부, 엑셀 · 인쇄용 목록
-- [x] 4. 서재: PDF 글자 읽기(맥: 앱의 --pdf-text = PDFKit + Vision OCR, 리눅스: pdftotext), 본문 표기 색인, 찾기
+- [x] 4. 서재: PDF 글자 읽기(맥: sermonroad-pdftext = PDFKit + Vision OCR, 리눅스: pdftotext), 본문 표기 색인, 찾기
 - [x] 5. 설교 도우미: API(키체인) / 구독 복사 방식, 출처 칩 · 자료 밖 표시, 설교 기록에 저장, 개요 → 중심 명제 · 대지
 - [x] 6. 화면 9개 (리눅스 Playwright 로 확인, 가짜 Claude 서버로 도우미 흐름 확인)
 - [x] 7. 사용 가이드 이미지 (docs/SermonROAD_사용가이드.png ← docs/guide.html, scripts/guide.py)
@@ -27,7 +27,8 @@
 
 ## 구조
 
-    app/shell/main.swift   Dock 앱 껍데기 (WKWebView, 엔진 켜고 끄기, 업데이트 뒤 다시 열기, --pdf-text 모드, 복사 · 폴더 고르기 다리)
+    app/shell/main.swift   Dock 앱 껍데기 (WKWebView, 엔진 켜고 끄기, 업데이트 뒤 다시 열기, 복사 · 폴더 고르기 다리)
+    app/pdftext/main.swift 서재 PDF 글자 읽기 도구 → Contents/Resources/sermonroad-pdftext (PDFKit + Vision, 앱이 아니라 Dock 에 안 나타남)
     app/Info.plist · AppIcon.svg(아이콘 D) → scripts/icon.py → AppIcon.png · AppIcon.icns · engine/web/icon.png
     engine/main.go         설정 · 경로(127.0.0.1:47931 + 토큰) · API 목록
     engine/store.go        data.json (설교 · 시리즈 · 예화 · 반복 일정 · 휴지통), 백업(Support/backups), 첨부(Support/files/<설교>/)

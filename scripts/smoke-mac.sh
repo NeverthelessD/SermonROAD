@@ -62,8 +62,10 @@ check "A8 엔진이 SermonROAD 앱의 자식 (앱 $APID → 지킴이 ${SUPPID:-
 
 echo "▶ L. 서재: PDF 글자 읽기 · 글자 인식(스캔) · 본문으로 찾기"
 LIB="$HOME/SermonROAD-test-library"; rm -rf "$LIB"; mkdir -p "$LIB"; cp "$ROOT"/scripts/testdata/*.pdf "$LIB/"
-"$APPDIR/Contents/MacOS/SermonROAD" --pdf-text "$LIB/스캔 시험.pdf" "$OUT/scan.json" > "$OUT/pdf-text.log" 2>&1; PRC=$?
-check "L1 앱이 PDF 글자를 읽음 (--pdf-text, 코드 $PRC)" test "$PRC" = "0" -a -s "$OUT/scan.json"
+recents() { defaults read com.apple.dock recent-apps 2>/dev/null | grep -c SermonROAD; }
+REC0=$(recents)
+"$APPDIR/Contents/Resources/sermonroad-pdftext" "$LIB/스캔 시험.pdf" "$OUT/scan.json" > "$OUT/pdf-text.log" 2>&1; PRC=$?
+check "L1 앱 안의 도구가 PDF 글자를 읽음 (코드 $PRC)" test "$PRC" = "0" -a -s "$OUT/scan.json"
 OCRT=$(python3 -c "import json; d=json.load(open('$OUT/scan.json')); print(len(d['ocr']), d['pages'][0][:60].replace(chr(10),' '))" 2>/dev/null)
 info "글자 인식 결과: $OCRT"
 check "L2 스캔 PDF 를 맥 글자 인식으로 읽음" bash -c "python3 -c \"import json,sys; d=json.load(open('$OUT/scan.json')); t=d['pages'][0]; sys.exit(0 if d['ocr'] and ('로마서' in t or '합력' in t or '8:28' in t) else 1)\""
@@ -78,6 +80,8 @@ done
 get /api/library > "$OUT/library.json"
 check "L3 서재 PDF 3개를 모두 읽음 (읽음 ${R:-?})" test "${R:-0}" = "3"
 check "L3b PDF 를 읽는 동안 Dock 에 앱이 하나만 (가장 많을 때 ${MAXAPPS}개)" test "$MAXAPPS" -le 1
+sleep 1; REC1=$(recents)
+check "L3c PDF 를 읽어도 Dock '최근 앱'에 SermonROAD 가 늘지 않음 ($REC0 → $REC1)" test "${REC1:-0}" -le "${REC0:-0}"
 HITS=$(post /api/library/find '{"ref":"롬 8:28-30"}' | tee "$OUT/find.json" | jq_ "len(d['hits'])")
 check "L4 서재에서 롬 8:28-30 을 다룬 쪽을 찾음 (${HITS:-0}곳)" test "${HITS:-0}" -ge 2
 

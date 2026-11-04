@@ -4,7 +4,7 @@ package main
 //   사용자가 고른 폴더 안의 PDF 를 읽어 쪽마다 글자를 보관하고(Support/library/<id>.json),
 //   쪽마다 성경 본문 표기(롬 8:28, 8장 28절 …)를 찾아 둬요. 본문을 정하면 그 본문을 다룬 쪽들을 찾아 줘요.
 //
-//   글자 읽기: 맥에서는 앱 자신(SermonROAD --pdf-text)이 PDFKit 과 맥의 글자 인식(Vision)으로 읽어요.
+//   글자 읽기: 맥에서는 앱 안의 작은 도구(sermonroad-pdftext)가 PDFKit 과 맥의 글자 인식(Vision)으로 읽어요.
 //   (스캔한 PDF 도 읽을 수 있어요.) 시험용 리눅스에서는 pdftotext 를 써요.
 
 import (
@@ -245,11 +245,11 @@ func (l *Library) extract(d *LibDoc) (*pdfCache, error) {
 			return nil, err
 		}
 	case runtime.GOOS == "darwin" && env("APP") != "":
-		bin := filepath.Join(env("APP"), "Contents", "MacOS", "SermonROAD")
+		bin := filepath.Join(env("APP"), "Contents", "Resources", "sermonroad-pdftext")
 		if !fileExists(bin) {
 			return nil, errors.New("앱을 찾지 못해서 PDF를 읽을 수 없어요. 앱을 다시 실행해 주세요")
 		}
-		if err := l.runPDFHelper(d, bin, []string{"--pdf-text", d.Path, out}); err != nil {
+		if err := l.runPDFHelper(d, bin, []string{d.Path, out}); err != nil {
 			return nil, err
 		}
 	default:

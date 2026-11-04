@@ -8,7 +8,8 @@ in anything the user sees (app screens, update text, guide image).
 It follows the user's ROAD app pattern (see the `road-mac-app` skill and the MSROAD repo): a real, visible Dock app
 (Swift shell `app/shell/main.swift`, WKWebView window) + Go engine (`engine/`, web UI embedded from `engine/web`) that runs as the
 app's child (app → supervisor → engine) only while the app is open. Never reintroduce hidden helpers or SIGTERM-ignoring.
-The shell also has a headless mode `SermonROAD --pdf-text <pdf> <out.json>` (PDFKit + Vision OCR) that the engine calls to read library PDFs.
+A separate CLI tool `Contents/Resources/sermonroad-pdftext <pdf> <out.json>` (app/pdftext/main.swift, PDFKit + Vision OCR) reads library PDFs;
+it is not the bundle executable on purpose, so running it never puts an icon in the Dock.
 
 The app can only be built on a Mac: pushing changes under app/, engine/, VERSION, scripts/testdata or the mac scripts triggers
 `.github/workflows/build-mac.yml`, which builds, ad-hoc signs, runs real-Mac smoke tests (`scripts/smoke-mac.sh`) and force-pushes
