@@ -22,7 +22,8 @@
 - [x] 5. 설교 도우미: API(키체인) / 구독 복사 방식, 출처 칩 · 자료 밖 표시, 설교 기록에 저장, 개요 → 중심 명제 · 대지
 - [x] 6. 화면 9개 (리눅스 Playwright 로 확인, 가짜 Claude 서버로 도우미 흐름 확인)
 - [x] 7. 사용 가이드 이미지 (docs/SermonROAD_사용가이드.png ← docs/guide.html, scripts/guide.py)
-- [ ] 8. 맥 빌드 서버 build=ok · smoke=ok → scripts/release.sh → download/SermonROAD.zip · 사용자에게 알리기
+- [x] 8. v1.0.0 출시 (2026-11-04): 맥 빌드 서버 31개 시험 통과(한국어 글자 인식 · 키체인 · 엑셀 · 지킴이 · 업데이트 뒤 다시 열기 포함)
+      → releases/latest.json · download/SermonROAD.zip. 빌드 서버 화면(1024×768)에서 왼쪽 로고 잘림 · PDF 읽을 때 Dock 최근 앱 늘어남을 고쳤어요.
 - [ ] 9. 사용자 맥에서 확인: 실제 서재 PDF(스캔본 포함) 글자 인식 속도 · 정확도, 실제 API 키로 도우미, 키체인 저장
 
 ## 구조
