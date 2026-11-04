@@ -52,10 +52,10 @@ svg { flex: 0 0 auto; }
 
 /* ---------- 틀 */
 #app { display: flex; height: 100vh; }
-#side { flex: 0 0 224px; display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 14px; background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; }
+#side { flex: 0 0 224px; display: flex; flex-direction: column; gap: 2px; padding: 20px 12px 14px; background: var(--side); border-right: 1px solid var(--line); overflow-y: auto; overflow-x: hidden; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 18px; }
 .brand img { border-radius: 9px; }
-.logo { font-family: Unbounded, Pretendard, sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0; }
+.logo { font-family: Unbounded, Pretendard, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 0; white-space: nowrap; }
 .logo em { font-style: normal; color: var(--brand); }
 .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; color: var(--muted); font-weight: 600; font-size: 14px; }
 .nav-item svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -249,7 +249,7 @@ h3 { margin: 0; font-size: 14px; font-weight: 800; }
 .dtab.on { border-color: var(--brand); }
 
 /* ---------- 모달 · 알림 */
-#modal-root .back { position: fixed; inset: 0; background: rgba(10, 12, 20, .45); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 20px; z-index: 50; overflow-y: auto; }
+#modal-root .back { position: fixed; inset: 0; background: rgba(10, 12, 20, .45); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 20px; z-index: 50; overflow-y: auto; overflow-x: hidden; }
 .modal { width: min(560px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--pop); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
 .modal.wide { width: min(860px, 100%); }
 .modal h2 { font-size: 18px; }

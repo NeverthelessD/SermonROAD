@@ -67,10 +67,17 @@ check "L1 앱이 PDF 글자를 읽음 (--pdf-text, 코드 $PRC)" test "$PRC" = "
 OCRT=$(python3 -c "import json; d=json.load(open('$OUT/scan.json')); print(len(d['ocr']), d['pages'][0][:60].replace(chr(10),' '))" 2>/dev/null)
 info "글자 인식 결과: $OCRT"
 check "L2 스캔 PDF 를 맥 글자 인식으로 읽음" bash -c "python3 -c \"import json,sys; d=json.load(open('$OUT/scan.json')); t=d['pages'][0]; sys.exit(0 if d['ocr'] and ('로마서' in t or '합력' in t or '8:28' in t) else 1)\""
+# Dock 에 보이는(Foreground) SermonROAD 앱 수
+apps() { lsappinfo list 2>/dev/null | awk '/"SermonROAD"/{f=1} f&&/type=/{if($0~/Foreground/)c++; f=0} END{print c+0}'; }
+MAXAPPS=0
 post /api/library/folder "{\"path\":\"$LIB\"}" > /dev/null
-for _ in $(seq 1 120); do R=$(get /api/library | jq_ "d['ready']"); [ "${R:-0}" = "3" ] && break; sleep 1; done
+for _ in $(seq 1 240); do
+  A=$(apps); [ "${A:-0}" -gt "$MAXAPPS" ] && MAXAPPS=$A
+  R=$(get /api/library | jq_ "d['ready']"); [ "${R:-0}" = "3" ] && break; sleep 0.5
+done
 get /api/library > "$OUT/library.json"
 check "L3 서재 PDF 3개를 모두 읽음 (읽음 ${R:-?})" test "${R:-0}" = "3"
+check "L3b PDF 를 읽는 동안 Dock 에 앱이 하나만 (가장 많을 때 ${MAXAPPS}개)" test "$MAXAPPS" -le 1
 HITS=$(post /api/library/find '{"ref":"롬 8:28-30"}' | tee "$OUT/find.json" | jq_ "len(d['hits'])")
 check "L4 서재에서 롬 8:28-30 을 다룬 쪽을 찾음 (${HITS:-0}곳)" test "${HITS:-0}" -ge 2
 

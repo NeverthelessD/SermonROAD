@@ -254,7 +254,9 @@ enum PDFText {
 
     /// 글자가 없는 쪽(스캔한 책)을 그림으로 그려서 맥의 글자 인식으로 읽어요 (한국어 · 영어)
     static func recognize(_ page: PDFPage) -> String? {
-        let box = page.bounds(for: .mediaBox)
+        // 그리기는 AppKit 을 거치지 않는 CoreGraphics 로 (창 서버에 붙지 않아서 Dock 에 아이콘이 생기지 않아요)
+        guard let cgPage = page.pageRef else { return nil }
+        let box = cgPage.getBoxRect(.mediaBox)
         let scale: CGFloat = 2.2
         let w = Int(box.width * scale), h = Int(box.height * scale)
         guard w > 10, h > 10, w < 12000, h < 12000,
@@ -264,7 +266,8 @@ enum PDFText {
         ctx.setFillColor(CGColor(gray: 1, alpha: 1))
         ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
         ctx.scaleBy(x: scale, y: scale)
-        page.draw(with: .mediaBox, to: ctx)
+        ctx.translateBy(x: -box.origin.x, y: -box.origin.y)
+        ctx.drawPDFPage(cgPage)
         guard let img = ctx.makeImage() else { return nil }
         let req = VNRecognizeTextRequest()
         req.recognitionLevel = .accurate
@@ -647,6 +650,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, 
 
 // 엔진이 부르는 모드: SermonROAD --pdf-text <PDF> <결과.json> [--no-ocr]  (창을 열지 않고 끝나요)
 if let i = CommandLine.arguments.firstIndex(of: "--pdf-text"), CommandLine.arguments.count > i + 2 {
+    // 이 모드는 화면 없이 글자만 읽어요. 혹시 시스템이 앱으로 여겨도 Dock 에 나타나지 않게 해요.
+    NSApplication.shared.setActivationPolicy(.prohibited)
     let noOCR = CommandLine.arguments.contains("--no-ocr")
     exit(PDFText.run(CommandLine.arguments[i + 1], CommandLine.arguments[i + 2], ocr: !noOCR))
 }
