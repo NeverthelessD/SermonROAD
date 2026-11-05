@@ -102,6 +102,25 @@ check "X1 엑셀 파일을 만듦 (${XP:-없음})" bash -c "test -s \"$XP\" && u
 check "X2 인쇄용 목록" bash -c "curl -fs '$(API)/print?t=$(tok)&scope=all' | grep -q '모든 것이 합력하여'"
 osascript -e 'tell application "Finder" to close every window' >/dev/null 2>&1
 
+echo "▶ I. 한꺼번에 등록 (원고 파일 폴더 · 붙여 넣기 · 되돌리기)"
+MS="$HOME/SermonROAD-test-manuscripts"; rm -rf "$MS"; mkdir -p "$MS/2019년"
+echo "원고" > "$MS/20180311 주일 롬8장28-30 하나님의 영원한 작정.hwp"
+echo "원고" > "$MS/2018.03.14_수요_시편23편_여호와는 나의 목자.docx"
+echo "원고" > "$MS/2019년/0317 주일오후 엡1장3-14절 창세 전에 택하사.txt"
+post /api/import/parse "{\"mode\":\"folder\",\"path\":\"$MS\",\"recursive\":true}" > "$OUT/import-rows.json"
+IR=$(python3 -c "import json; d=json.load(open('$OUT/import-rows.json')); print(' / '.join(r['date']+' '+r['ref'] for r in d['rows']))" 2>/dev/null)
+check "I1 원고 파일 이름에서 날짜 · 본문을 읽음 ($IR)" bash -c "echo '$IR' | grep -q '2018-03-11 롬 8:28–30' && echo '$IR' | grep -q '2019-03-17 엡 1:3–14'"
+python3 -c "import json; d=json.load(open('$OUT/import-rows.json')); print(json.dumps({'rows': d['rows'], 'attach': True}))" > "$OUT/import-commit.json"
+IC=$(curl -fs -m 30 -X POST -H "x-token: $(tok)" -H 'content-type: application/json' --data @"$OUT/import-commit.json" "$(API)/api/import/commit")
+ICOUNT=$(echo "$IC" | jq_ "d['count']"); IFILES=$(echo "$IC" | jq_ "d['files']"); IBATCH=$(echo "$IC" | jq_ "d['batch']")
+check "I2 3편 등록 · 원고 3개 첨부 (${ICOUNT:-?}편, ${IFILES:-?}개)" test "${ICOUNT:-0}" = "3" -a "${IFILES:-0}" = "3"
+check "I3 등록 전에 백업을 남김" bash -c "ls '$SUP/backups/' | grep -q '^before-import-'"
+post /api/import/undo "{\"batch\":\"$IBATCH\"}" > /dev/null
+N3=$(get /api/data | jq_ "len(d['sermons'])")
+check "I4 방금 등록한 것을 되돌림 (설교 ${N3:-?}편)" test "${N3:-0}" = "4"
+PR=$(post /api/import/parse '{"mode":"text","text":"날짜\t종류\t본문\t제목\t장소\n2017.05.07\t주일\t요 3:16\t이처럼 사랑하사\t기도원"}' | jq_ "d['rows'][0]['place']+' '+d['rows'][0]['ref']")
+check "I5 붙여 넣은 표를 읽음 ($PR)" test "$PR" = "기도원 요 3:16"
+
 echo "▶ B. Dock 아이콘 다시 누르기(reopen)"
 osascript -e 'tell application "SermonROAD" to reopen' >/dev/null 2>&1; sleep 1
 check "B1 다시 열기 뒤에도 앱·엔진 그대로" test "$(app_pid)" = "$APID"

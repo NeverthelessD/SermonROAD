@@ -423,6 +423,10 @@ func (a *App) routes() http.Handler {
 	api("/api/backup/restore", a.handleBackupRestore)
 	api("/api/backup/reveal", a.handleBackupReveal)
 	api("/api/export", a.handleExport)
+	api("/api/import/parse", a.handleImportParse)
+	api("/api/import/commit", a.handleImportCommit)
+	api("/api/import/undo", a.handleImportUndo)
+	api("/api/import/template", a.handleImportTemplate)
 
 	// 서재 · 설교 도우미
 	api("/api/library", a.handleLibrary)

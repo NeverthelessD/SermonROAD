@@ -24,6 +24,10 @@
 - [x] 7. 사용 가이드 이미지 (docs/SermonROAD_사용가이드.png ← docs/guide.html, scripts/guide.py)
 - [x] 8. v1.0.0 출시 (2026-11-04): 맥 빌드 서버 31개 시험 통과(한국어 글자 인식 · 키체인 · 엑셀 · 지킴이 · 업데이트 뒤 다시 열기 포함)
       → releases/latest.json · download/SermonROAD.zip. 빌드 서버 화면(1024×768)에서 왼쪽 로고 잘림 · PDF 읽을 때 Dock 최근 앱 늘어남을 고쳤어요.
+- [x] 10. v1.1.0 한꺼번에 등록 (2026-11-06, 사용자 요청: 앱 전 설교가 많아 하나씩 넣기 어려움)
+      engine/import.go · web/js/import.js (#import, 설교 기록 머리 버튼 · 설교 지도에 30편 미만일 때 안내 줄)
+      표 붙여 넣기(탭 · | · ' / ' · 한 줄 통째) / 엑셀 .xlsx(서식 파일 받기, 보기 줄 건너뜀) / 원고 파일 폴더(파일 이름 → 날짜 · 종류 · 본문 · 절기 · 제목, 원고 첨부)
+      → 미리 보기 표에서 고치기(이미 있는 기록과 겹치면 꺼 둠, 날짜 없으면 등록 못 함) → 등록 전 before-import 백업 → 바로 되돌리기(Extra.import 묶음 번호)
 - [ ] 9. 사용자 맥에서 확인: 실제 서재 PDF(스캔본 포함) 글자 인식 속도 · 정확도, 실제 API 키로 도우미, 키체인 저장
 
 ## 구조
@@ -36,6 +40,7 @@
     engine/bible.go        66권 표(HOLYBIBLE 코드 OLD01~39 · NEW01~27, 확인함) · 본문 읽기 · 겹침 · PDF 글 속 본문 표기 찾기
     engine/library.go      서재 폴더 훑기 · 글자 캐시(Support/library/<id>.json) · 본문으로 찾기
     engine/helper.go       도우미 요청문 · Claude API(tool 결과) · 키체인(/usr/bin/security) · 이번 달 사용량
+    engine/import.go       한꺼번에 등록: 느슨한 읽기(parseLoose: 본문 → 날짜 → 종류 → 절기 → 제목), 머리글 표, .xlsx 읽기, 폴더 훑기, 등록 · 되돌리기
     engine/export.go       엑셀(.xlsx 직접 만듦, ~/Downloads) · /print 인쇄용 목록(브라우저)
     engine/supervise.go · update.go · diag.go · proc_unix.go   MSROAD 와 같은 지킴이 · 업데이트 · 진단
     engine/web/            index.html · css/app.css(토큰) · css/gowun.css(고운바탕 OFL)

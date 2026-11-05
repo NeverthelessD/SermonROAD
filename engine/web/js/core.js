@@ -240,7 +240,7 @@ function openExternal(url) { window.open(url, '_blank'); }
 const NAV = [
   { name: 'map', label: '설교 지도', icon: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>' },
   { name: 'calendar', label: '설교 달력', icon: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>' },
-  { name: 'records', label: '설교 기록', icon: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', also: ['sermon'] },
+  { name: 'records', label: '설교 기록', icon: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', also: ['sermon', 'import'] },
   { name: 'series', label: '강해 시리즈', icon: '<path d="M12 3 3 8l9 5 9-5-9-5ZM3 13l9 5 9-5"/>' },
   { name: 'confess', label: '요리문답 · 신앙고백', icon: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2V5Z"/><path d="M4 19a2 2 0 0 1 2-2h13v4H6a2 2 0 0 1-2-2ZM11.5 7v6M9 9.4h5"/>' },
   { name: 'illus', label: '예화 보관함', icon: '<path d="M7 8h10M7 12h6M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/>' },

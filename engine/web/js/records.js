@@ -70,6 +70,7 @@ Screens.records = (() => {
             <button type="button" class="link" data-crumb="p" style="color:var(--muted);font-size:14px">${pa}–${pb}년</button><span>›</span>
             <span>${Y}년</span><span>›</span><b style="color:var(--text)">${M}월</b></nav></div>
         <label class="search" style="flex:0 1 280px">${svgIcon(IC.search)}<input id="q" type="search" placeholder="본문 · 제목 · 장소 찾기" aria-label="설교 찾기"></label>
+        <a class="btn" href="#import">${svgIcon(IC.file)}한꺼번에 등록</a>
         <a class="btn brand" href="#sermon?new=1">${svgIcon(IC.plus)}새 설교</a>
       </div>
       <section class="col" aria-label="기간 고르기"><div class="step"><span class="k">1</span><h3>기간</h3></div>

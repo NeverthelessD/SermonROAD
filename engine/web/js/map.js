@@ -63,6 +63,7 @@ Screens.map = (() => {
         <label class="search" style="flex:0 1 300px">${svgIcon(IC.search)}<input id="q" type="search" placeholder="본문 · 제목 · 내용 · 장소 찾기" aria-label="찾기"><span class="kbd">⌘F</span></label>
         <a class="btn brand" href="#sermon?new=1">${svgIcon(IC.plus)}새 설교</a>
       </div>
+      ${sermons.length < 30 ? `<a class="upcoming" href="#import" style="border-style:dashed"><span class="lab">${svgIcon(IC.file)}예전 설교 한꺼번에 등록</span><span class="muted" style="font-size:14px">엑셀 · 한글 표를 붙여 넣거나, 원고 파일 폴더를 고르면 날짜 · 본문 · 제목을 읽어 한 번에 넣어요.</span><span class="muted" style="margin-left:auto;font-size:13px;font-weight:700">시작하기 ›</span></a>` : ''}
       <div class="row wrap" style="gap:10px">
         <div class="stat">기록한 설교 <b>${sermons.length}편</b></div>
         <div class="stat">설교한 책 <b>${covered} / 66권</b></div>
