@@ -45,6 +45,10 @@ SER=$(post /api/series/save '{"series":{"name":"로마서 강해","kind":"주일
 R1=$(post /api/sermon/save "{\"sermon\":{\"date\":\"2026-11-01\",\"time\":\"11:00\",\"kind\":\"주일\",\"title\":\"모든 것이 합력하여 선을 이루느니라\",\"passageText\":\"로마서 8장 28~30절\",\"place\":\"본 교회\",\"status\":\"설교함\",\"seriesId\":\"$SER\",\"seriesNo\":23,\"points\":[\"합력하여 선을 이루시는 하나님\",\"끊어지지 않는 구원의 사슬\"],\"confessions\":[{\"doc\":\"wcf\",\"n\":3}]}}")
 REF=$(echo "$R1" | jq_ "d['sermon']['passages'][0]['ref']")
 check "A4 설교를 저장하고 본문을 알아봄 (${REF:-?})" test "$REF" = "롬 8:28–30"
+KD=$(post /api/sermon/save '{"sermon":{"date":"2026-10-11","kind":"부서","kindOther":"청년부","title":"부서 시험","passageText":"요 15:1-8","place":"본 교회","status":"설교함"}}' | jq_ "d['sermon']['kind']+' '+d['sermon']['kindOther']")
+check "A4b 설교 종류 ‘부서’를 저장함 ($KD)" test "$KD" = "부서 청년부"
+KID=$(get /api/data | jq_ "[s['id'] for s in d['sermons'] if s['title']=='부서 시험'][0]")
+post /api/sermon/delete "{\"id\":\"$KID\"}" > /dev/null
 for d in 2025-03-02 2024-06-09 2023-05-14; do
   post /api/sermon/save "{\"sermon\":{\"date\":\"$d\",\"kind\":\"주일\",\"title\":\"시험 설교 $d\",\"passageText\":\"요 3:16\",\"place\":\"본 교회\",\"status\":\"설교함\"}}" > /dev/null
 done

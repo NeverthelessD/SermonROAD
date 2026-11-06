@@ -131,7 +131,8 @@ var kindWords = []struct {
 	{regexp.MustCompile(`장례(?:\s?예배)?|입관(?:\s?예배)?|발인(?:\s?예배)?|하관(?:\s?예배)?`), "그 외", "장례 예배"},
 	{regexp.MustCompile(`결혼(?:\s?예배|식)?|혼인(?:\s?예배)?`), "그 외", "결혼 예배"},
 	{regexp.MustCompile(`부흥회|사경회`), "그 외", "부흥회"},
-	{regexp.MustCompile(`수련회`), "그 외", "수련회"},
+	{regexp.MustCompile(`(여름|겨울|봄|가을|청년|학생|중고등부|교사|제직|전교인|교역자)?\s?수련회`), "수련회", ""},
+	{regexp.MustCompile(`청년부|대학부|대학청년부|청장년부|중고등부|중등부|고등부|학생부|유초등부|초등부|유년부|소년부|아동부|유치부|영유아부|영아부|주일학교|교회학교|장년부|부서\s?예배|부서`), "부서", ""},
 	{regexp.MustCompile(`임직(?:\s?예배|식)?`), "그 외", "임직 예배"},
 	{regexp.MustCompile(`헌신\s?예배`), "그 외", "헌신 예배"},
 	{regexp.MustCompile(`송구영신(?:\s?예배)?`), "그 외", "송구영신 예배"},
@@ -168,7 +169,15 @@ func takeSeason(s string) (string, string) {
 func takeKind(s string) (kind, other, rest string) {
 	for _, k := range kindWords {
 		if loc := k.re.FindStringIndex(s); loc != nil {
-			return k.kind, k.name, s[:loc[0]] + " " + s[loc[1]:]
+			name := k.name
+			if k.kind == "부서" || k.kind == "수련회" {
+				// 어느 부서 · 어떤 수련회인지 남겨요 ("청년부", "여름 수련회") — 그냥 "부서" · "수련회"면 비워 둬요
+				w := strings.TrimSpace(s[loc[0]:loc[1]])
+				if w != "부서" && w != "수련회" && !strings.HasPrefix(w, "부서") {
+					name = w
+				}
+			}
+			return k.kind, name, s[:loc[0]] + " " + s[loc[1]:]
 		}
 	}
 	return "", "", s

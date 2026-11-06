@@ -109,10 +109,17 @@ function sermonsOverlapping(passages, exceptId) {
 }
 
 // ---------------------------------------------------------------- 종류 · 상태 · 절기
-const KINDS = ['주일', '주일 오후', '새벽', '수요', '금요', '성찬', '그 외'];
-const KC = { '주일': '#4C7FF0', '주일 오후': '#7A6CF2', '새벽': '#D9A21E', '수요': '#2FA463', '금요': '#E8742F', '성찬': '#D9434A', '그 외': '#8A90A6' };
+const KINDS = ['주일', '주일 오후', '새벽', '수요', '금요', '성찬', '부서', '수련회', '그 외'];
+const KIND_DETAIL = { '부서': '어느 부서 (예: 청년부, 중고등부, 주일학교)', '수련회': '어떤 수련회 (예: 여름 수련회, 청년 수련회)', '그 외': '예: 장례 예배, 결혼 예배, 임직식, 부흥회, 심방' };
+const KC = { '주일': '#4C7FF0', '주일 오후': '#7A6CF2', '새벽': '#D9A21E', '수요': '#2FA463', '금요': '#E8742F', '성찬': '#D9434A', '부서': '#1DA6B5', '수련회': '#B5832D', '그 외': '#8A90A6' };
 const STATUSES = ['본문 미정', '준비 중', '원고 완료', '설교함'];
-function kindLabel(s) { return s.kind === '그 외' && s.kindOther ? s.kindOther : s.kind; }
+function kindLabel(s) {
+  const o = (s.kindOther || '').trim();
+  if (!o) return s.kind;
+  if (s.kind === '그 외') return o;
+  if (s.kind === '부서' || s.kind === '수련회') return s.kind + ' · ' + o;
+  return s.kind;
+}
 function kindChip(k, label) { return `<span class="kind" style="background:${hexA(KC[k] || '#8A90A6', isDark() ? 0.22 : 0.12)};color:${KC[k] || '#8A90A6'}">${esc(label || k)}</span>`; }
 function statusDot(st) {
   const m = { '본문 미정': 'border:1.5px dashed var(--faint)', '준비 중': 'background:var(--prep)', '원고 완료': 'background:var(--ready)', '설교함': 'background:var(--done)' };

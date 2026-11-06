@@ -100,7 +100,7 @@ Screens.import = (() => {
       <td><input type="checkbox" data-f="on" ${r.on ? 'checked' : ''} aria-label="${i + 1}번째 줄 등록" style="width:16px;height:16px;accent-color:var(--brand)"></td>
       <td><input class="input" type="date" data-f="date" value="${esc(r.date)}" style="height:34px;font-size:13px;padding:0 8px;${iss === '날짜' ? 'border-color:var(--warn)' : ''}"></td>
       <td><select class="select" data-f="kind" style="height:34px;font-size:13px;padding:0 26px 0 8px;background-position:calc(100% - 14px) 15px,calc(100% - 9px) 15px">${KINDS.map((k) => `<option ${k === r.kind ? 'selected' : ''}>${k}</option>`).join('')}</select>
-        ${r.kind === '그 외' ? `<input class="input" data-f="kindOther" value="${esc(r.kindOther || '')}" placeholder="이름" style="height:30px;font-size:12px;margin-top:4px;padding:0 8px">` : ''}</td>
+        ${KIND_DETAIL[r.kind] ? `<input class="input" data-f="kindOther" value="${esc(r.kindOther || '')}" placeholder="이름" style="height:30px;font-size:12px;margin-top:4px;padding:0 8px">` : ''}</td>
       <td><input class="input" data-f="passageText" value="${esc(r.passageText)}" style="height:34px;font-size:13px;padding:0 8px;${iss === '본문' ? 'border-color:var(--warn)' : ''}">
         <div style="font-size:11px;margin-top:3px" class="${r.passageText ? (r.refOK ? 'ok-text' : 'warn-text') : 'faint'}">${r.passageText ? (r.refOK ? '✓ ' + esc(r.ref) : '본문을 알아보지 못했어요') : '본문 없음'}</div></td>
       <td><input class="input" data-f="title" value="${esc(r.title)}" placeholder="제목 없음" style="height:34px;font-size:13px;padding:0 8px">

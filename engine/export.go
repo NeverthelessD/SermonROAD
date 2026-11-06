@@ -74,6 +74,20 @@ func (s *Store) seriesName(id string) string {
 	return ""
 }
 
+// kindName: 화면 · 엑셀에 보일 종류 이름 (그 외 → 적은 이름, 부서 · 수련회 → "부서 · 청년부")
+func kindName(x *Sermon) string {
+	o := strings.TrimSpace(x.KindOther)
+	switch {
+	case o == "":
+		return x.Kind
+	case x.Kind == "그 외":
+		return o
+	case x.Kind == "부서" || x.Kind == "수련회":
+		return x.Kind + " · " + o
+	}
+	return x.Kind
+}
+
 func scopeLabel(scope string, y, m int) string {
 	switch scope {
 	case "year":
@@ -95,10 +109,7 @@ func dowOf(date string) string {
 func (a *App) exportRows(list []*Sermon) [][]string {
 	rows := [][]string{{"날짜", "요일", "시간", "종류", "절기", "본문", "제목", "장소", "강해 시리즈", "상태", "중심 명제", "대지", "요약 · 메모", "요리문답 · 신앙고백", "참고한 자료"}}
 	for _, x := range list {
-		kind := x.Kind
-		if kind == "그 외" && x.KindOther != "" {
-			kind = x.KindOther
-		}
+		kind := kindName(x)
 		ser := a.store.seriesName(x.SeriesID)
 		if ser != "" && x.SeriesNo > 0 {
 			ser += " " + strconv.Itoa(x.SeriesNo)
@@ -286,10 +297,7 @@ th{background:#F1EADB;font-size:12px}td.d{white-space:nowrap;font-variant-numeri
 </style></head><body><button class="btn" onclick="print()">인쇄 (⌘P)</button><h1>설교 기록 — %s</h1><p class="sub">모두 %d편</p>
 <table><thead><tr><th>날짜</th><th>종류</th><th>본문</th><th>제목</th><th>장소</th><th>시리즈</th></tr></thead><tbody>`, e(label), e(label), len(list))
 	for _, x := range list {
-		kind := x.Kind
-		if kind == "그 외" && x.KindOther != "" {
-			kind = x.KindOther
-		}
+		kind := kindName(x)
 		ser := a.store.seriesName(x.SeriesID)
 		if ser != "" && x.SeriesNo > 0 {
 			ser += " " + strconv.Itoa(x.SeriesNo)

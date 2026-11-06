@@ -104,7 +104,7 @@ Screens.sermon = (() => {
           <section class="card" aria-label="종류와 절기">
             <div class="col" style="gap:8px"><h2>설교 종류</h2>
               <div class="row wrap">${KINDS.map((k) => `<button type="button" class="pill ${F.kind === k ? 'on' : ''}" data-kind="${k}" aria-pressed="${F.kind === k}">${k}</button>`).join('')}</div>
-              ${F.kind === '그 외' ? `<input class="input" id="f-kindother" value="${esc(F.kindOther)}" placeholder="예: 장례 예배, 결혼 예배, 임직식, 부흥회, 심방" style="max-width:360px;height:38px;font-size:14px">` : ''}
+              ${KIND_DETAIL[F.kind] ? `<input class="input" id="f-kindother" value="${esc(F.kindOther)}" placeholder="${esc(KIND_DETAIL[F.kind])}${F.kind === '그 외' ? '' : ' · 적지 않아도 돼요'}" aria-label="${F.kind} 이름" style="max-width:380px;height:38px;font-size:14px">` : ''}
             </div>
             <div class="col" style="gap:8px"><h2>절기 <span class="faint" style="font-size:12px;font-weight:600">날짜를 보고 알맞은 절기를 먼저 골라 둬요${seasonOf(parseISO(F.date)) ? ' · 이날은 ' + esc(seasonOf(parseISO(F.date))) : ''}</span></h2>
               <div class="row wrap" style="gap:6px">${SEASON_OPTIONS.map((s) => {

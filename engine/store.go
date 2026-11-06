@@ -38,10 +38,10 @@ type ConfLink struct {
 
 type Sermon struct {
 	ID          string            `json:"id"`
-	Date        string            `json:"date"` // 2026-11-01
-	Time        string            `json:"time"` // 11:00
-	Kind        string            `json:"kind"` // 주일 | 주일 오후 | 새벽 | 수요 | 금요 | 성찬 | 그 외
-	KindOther   string            `json:"kindOther"`
+	Date        string            `json:"date"`      // 2026-11-01
+	Time        string            `json:"time"`      // 11:00
+	Kind        string            `json:"kind"`      // 주일 | 주일 오후 | 새벽 | 수요 | 금요 | 성찬 | 부서 | 수련회 | 그 외
+	KindOther   string            `json:"kindOther"` // 그 외: 이름 · 부서: 어느 부서 · 수련회: 어떤 수련회 (적지 않아도 돼요)
 	Season      string            `json:"season"`
 	Title       string            `json:"title"`
 	PassageText string            `json:"passageText"` // 사용자가 적은 본문 표기 그대로
@@ -369,7 +369,7 @@ func (a *App) handleSermonGet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, x)
 }
 
-var validKinds = map[string]bool{"주일": true, "주일 오후": true, "새벽": true, "수요": true, "금요": true, "성찬": true, "그 외": true}
+var validKinds = map[string]bool{"주일": true, "주일 오후": true, "새벽": true, "수요": true, "금요": true, "성찬": true, "부서": true, "수련회": true, "그 외": true}
 var validStatus = map[string]bool{"본문 미정": true, "준비 중": true, "원고 완료": true, "설교함": true}
 
 func (a *App) handleSermonSave(w http.ResponseWriter, r *http.Request) {
