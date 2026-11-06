@@ -1,0 +1,5 @@
+--- A 실행 중
+ 2255     1 S    /Applications/SermonROAD.app/Contents/MacOS/SermonROAD
+ 2264  2255 S    /Users/runner/Library/Application Support/SermonROAD/bin/sermonroad-engine
+ 2266  2264 S    /Users/runner/Library/Application Support/SermonROAD/bin/sermonroad-engine
+--- D 종료 뒤
