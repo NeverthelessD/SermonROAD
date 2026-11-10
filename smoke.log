@@ -1,0 +1,21 @@
+PASS P1 글자 PDF 읽기 (PDFium) — 1.8초 · 7쪽 · 진행 줄 7개 · 
+PASS P2 두 번째 PDF (빨리 시작) — 0.1초
+PASS O0 Windows 글자 인식 언어 — en-US,ko 
+PASS O1 스캔 PDF 글자 인식 (Windows.Media.Ocr) — 1.9초 · ocr=[1] · '로마서 강해 제8장\n롬 828 모든 것이 합력하여 선을 이루느니라\n하나님을 사랑하는 자들에게' · 글자 인식 언어: ko,en-US
+PASS L1 실행기가 엔진을 켬 — 0.5초 · 포트 47931 · 실행기 끝남=True
+PASS L2 엔진 대답 (ping) — {'build': '1.2.0', 'ok': True, 'shell': 'windows'}
+PASS L3 설정 · 저장 위치 — windows/amd64 · C:\Users\RUNNER~1\AppData\Local\Temp\SermonROAD-smoke · 내보내기 C:\Users\runneradmin\Downloads
+PASS L4 앱 창 (Edge · Chrome 앱 창) — shot-app.png
+PASS L5 다시 실행하면 창만 다시 열기 — 0.1초
+PASS D1 설교 기록 저장 — 1편 · {'ok': True, 'rev': 1794294470965, 'sermon': {'id': 's2d7b72163ad4', 'date': '2026-11-08', 'time': '', 'kind': '주일', 'ki
+PASS D2 엑셀 내보내기 — {'count': 1, 'ok': True, 'path': 'C:\\Users\\runneradmin\\Downloads\\SermonROAD 설교 기록 전체.xlsx'}
+PASS D3 백업 — {'backups': [{'name': 'auto-20261110-070750.json', 'kind': 'auto', 'time': '2026-11-10 07:07', 'size': 619, 'sermons': 0}, {'name': 'manual-20261110-0
+PASS K1 API 키를 자격 증명 관리자에 저장 — hasKey=True · cmdkey 목록에 있음=True
+PASS K2 키가 파일로 남지 않음
+PASS K3 키 지우기
+PASS K4 ChatGPT · 제미나이 키를 따로 저장 — claude=0,chatgpt=1,gemini=1
+PASS K5 ChatGPT · 제미나이 키 지우기
+PASS S1 서재 폴더 읽기 — 2.0초 · 로마서 시험 주석:ready:7쪽:ocr0, 스캔 시험:ready:1쪽:ocr1, 표준문서 시험:ready:3쪽:ocr0
+PASS S2 본문으로 찾기 (롬 8:1) — [{'doc': 'd2ff92749fc95a', 'name': '로마서 시험 주석', 'book': 45, 'from': 2, 'to': 6, 'hits': 2, 'score': 10.300000000000002, 'snippet': '제8장 8:1 그러므로 이제 그리스도 예수 안에 있는 자에게는 결코 정죄함이 없다. 1절은 7 장의 탄식에 대한 하나님의 
+PASS Q1 종료 버튼 → 엔진 끝
+20/20 통과

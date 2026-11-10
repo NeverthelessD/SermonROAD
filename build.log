@@ -1,0 +1,21 @@
+▶ 엔진 테스트 · 빌드 (windows/amd64, v1.2.0)
+go: downloading github.com/danieljoos/wincred v1.2.2
+go: downloading github.com/harry1453/go-common-file-dialog v1.2.0
+go: downloading github.com/klippa-app/go-pdfium v1.17.2
+go: downloading github.com/tetratelabs/wazero v1.9.0
+go: downloading golang.org/x/sys v0.36.0
+go: downloading github.com/go-ole/go-ole v1.2.4
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/jolestar/go-commons-pool/v2 v2.1.2
+go: downloading golang.org/x/net v0.44.0
+go: downloading golang.org/x/text v0.29.0
+ok  	sermonroad	0.124s
+go: downloading github.com/tc-hib/go-winres v0.3.3
+go: downloading github.com/tc-hib/winres v0.2.1
+go: downloading github.com/urfave/cli/v2 v2.25.7
+go: downloading github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+go: downloading golang.org/x/image v0.12.0
+go: downloading github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673
+go: downloading github.com/cpuguy83/go-md2man/v2 v2.0.2
+go: downloading github.com/russross/blackfriday/v2 v2.1.0
+✔ dist/win/stage/SermonROAD.exe (22M)
