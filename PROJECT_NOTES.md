@@ -30,7 +30,7 @@
       engine/import.go · web/js/import.js (#import, 설교 기록 머리 버튼 · 설교 지도에 30편 미만일 때 안내 줄)
       표 붙여 넣기(탭 · | · ' / ' · 한 줄 통째) / 엑셀 .xlsx(서식 파일 받기, 보기 줄 건너뜀) / 원고 파일 폴더(파일 이름 → 날짜 · 종류 · 본문 · 절기 · 제목, 원고 첨부)
       → 미리 보기 표에서 고치기(이미 있는 기록과 겹치면 꺼 둠, 날짜 없으면 등록 못 함) → 등록 전 before-import 백업 → 바로 되돌리기(Extra.import 묶음 번호)
-- [x] 11. Windows 판 (2026-11-10, 사용자 요청 "윈도우용도 만들어줘")
+- [x] 11. Windows 판 v1.1.1 출시 (2026-11-10, 사용자 요청 "윈도우용도 만들어줘", Windows 빌드 서버 18개 시험 통과 · 맥 빌드 서버도 통과)
       MSROAD 와 같은 방식: SermonROAD.exe 하나 = 실행기 + 엔진 + 서재 PDF 읽기 도구. 화면은 Edge/Chrome 앱 창(주소창 없음).
       리눅스에서 scripts/build-win.sh 로 만들고, Windows 빌드 서버(.github/workflows/build-win.yml → scripts/ci-win.sh → scripts/smoke-win.py)가
       실제 Windows 에서 시험해 ci-results-win 브랜치에 올려요. 사용 가이드: docs/guide-win.html → docs/SermonROAD_Windows_사용가이드.png

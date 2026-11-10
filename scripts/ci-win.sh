@@ -11,7 +11,7 @@ if bash scripts/build-win.sh --test > "$OUT/build.log" 2>&1; then
   BUILD=ok
   export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
   python scripts/smoke-win.py dist/win/stage/SermonROAD.exe "$OUT/smoke" > "$OUT/smoke.log" 2>&1
-  SMOKE="$(python -c "import json;print(json.load(open('$OUT/smoke/status.json'))['smoke'])" 2>/dev/null || echo fail)"
+  SMOKE="$(cd "$OUT" && python -c "import json;print(json.load(open('smoke/status.json'))['smoke'])" 2>/dev/null || echo fail)"
 fi
 printf '{"version":"%s","commit":"%s","build":"%s","smoke":"%s"}\n' "$VERSION" "${GITHUB_SHA:-local}" "$BUILD" "$SMOKE" > "$OUT/status.json"
 cat "$OUT/status.json"; tail -30 "$OUT/build.log"; [ -f "$OUT/smoke.log" ] && cat "$OUT/smoke.log"
