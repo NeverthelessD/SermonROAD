@@ -2,7 +2,7 @@
 
 package main
 
-// Claude API 키는 Windows 자격 증명 관리자(제어판 › 자격 증명 관리자 › Windows 자격 증명)에 저장해요.
+// 설교 도우미 AI(Claude · ChatGPT · 제미나이)의 API 키는 Windows 자격 증명 관리자(제어판 › 자격 증명 관리자 › Windows 자격 증명)에 저장해요.
 
 import (
 	"strings"

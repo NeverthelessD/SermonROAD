@@ -1,11 +1,13 @@
-/* 설정 — Claude 연결 · 개혁주의 기준 · 서재 · 화면 모드 · 업데이트 */
+/* 설정 — AI 연결 (Claude · ChatGPT · 제미나이) · 개혁주의 기준 · 서재 · 화면 모드 · 업데이트 */
 'use strict';
 
 Screens.settings = (() => {
   async function render(el) {
     try { S.claude = await api('/api/claude'); } catch (e) { /* 그대로 */ }
+    refreshModels(el);
     if (!S.lib) { try { S.lib = await api('/api/library'); } catch (e) { /* 그대로 */ } }
-    const st = S.settings, c = S.claude || { hasKey: false, models: [], usage: {} };
+    const st = S.settings, c = S.claude || { providers: [] };
+    const ai = curAI(), N = aiName(ai), P = aiInfo(ai);
     const m = st.claudeMode === 'copy' ? 'copy' : 'api';
     const L = S.lib || {};
     const u = S.update || {};
@@ -13,29 +15,35 @@ Screens.settings = (() => {
       <h1>설정</h1>
       <div class="split">
         <div class="main">
-          <section class="card" aria-label="Claude 연결">
-            <div><h2 style="font-size:16px">설교 도우미 · Claude 연결</h2><p class="muted" style="margin:4px 0 0;font-size:13px">언제든 바꿀 수 있어요.</p></div>
+          <section class="card" aria-label="AI 연결">
+            <div><h2 style="font-size:16px">설교 도우미 · AI 연결</h2><p class="muted" style="margin:4px 0 0;font-size:13px">쓰실 AI 를 고르세요. 언제든 바꿀 수 있고, 도우미 화면에서 다른 AI 로도 다시 받아 볼 수 있어요.</p></div>
+            <div role="radiogroup" aria-label="쓸 AI" class="ai-pick">
+              ${AI_LIST.map(([k, n, co]) => { const p = (c.providers || []).find((x) => x.id === k) || {}; return `<button type="button" role="radio" aria-checked="${ai === k}" class="radio-card ${ai === k ? 'on' : ''}" data-ai="${k}">
+                <span class="row" style="gap:8px"><span class="rd"></span><b style="font-size:15px">${n}</b><span class="faint" style="font-size:12px">${co}</span></span>
+                <span class="row" style="gap:6px;font-size:12px;color:var(--muted)"><span class="dot" style="background:${p.hasKey ? 'var(--ready)' : 'var(--line2)'}"></span>${p.hasKey ? 'API 키 있음' : 'API 키 없음'}</span></button>`; }).join('')}
+            </div>
             <div role="radiogroup" aria-label="연결 방법" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
-              ${[['api', '앱에서 바로 (API 키)', '버튼 하나로 도우미 결과가 앱 안에 바로 나와요. 여러 PDF 자료를 한꺼번에 보내기 좋아요.', '추천 · 쓴 만큼 요금'],
-                 ['copy', '지금 쓰는 Claude 구독으로', '앱이 요청문과 자료를 준비해 복사해 주면, Claude 에 붙여 넣고 답을 다시 가져와요.', '추가 비용 없음 · 손이 조금 더 가요']].map(([k, t, d, tag]) =>
+              ${[['api', '앱에서 바로 (API 키)', '버튼 하나로 도우미 결과가 앱 안에 바로 나와요. 여러 PDF 자료를 한꺼번에 보내기 좋아요.', ai === 'gemini' ? '추천 · 무료 구간 있음 · 넘으면 쓴 만큼 요금' : '추천 · 쓴 만큼 요금'],
+                 ['copy', `지금 쓰는 ${N} 구독으로`, `앱이 요청문과 자료를 준비해 복사해 주면, ${N}${aiGap(N)}에 붙여 넣고 답을 다시 가져와요.`, '추가 비용 없음 · 손이 조금 더 가요']].map(([k, t, d, tag]) =>
                 `<button type="button" role="radio" aria-checked="${m === k}" class="radio-card ${m === k ? 'on' : ''}" data-mode="${k}">
                   <span class="row" style="gap:8px"><span class="rd"></span><b style="font-size:15px">${t}</b></span>
                   <span class="muted" style="font-size:13px;line-height:1.55">${d}</span><span style="font-size:12px;font-weight:700;color:${m === k ? 'var(--brand)' : 'var(--faint)'}">${tag}</span></button>`).join('')}
             </div>
             ${m === 'api' ? `<div class="tile col" style="gap:10px;padding:14px">
-              <label class="field" for="apikey">API 키 ${c.hasKey ? `<span class="faint" style="font-weight:600">· 저장된 키 ${esc(c.masked)}</span>` : ''}</label>
+              <label class="field" for="apikey">${N} API 키 ${P.hasKey ? `<span class="faint" style="font-weight:600">· 저장된 키 ${esc(P.masked)}</span>` : ''}</label>
               <div class="row wrap" style="gap:8px">
-                <input class="input" id="apikey" type="password" autocomplete="off" placeholder="${c.hasKey ? '바꾸려면 새 키를 붙여 넣으세요' : 'sk-ant- 로 시작하는 키를 붙여 넣으세요'}" style="flex:1 1 260px">
+                <input class="input" id="apikey" type="password" autocomplete="off" placeholder="${P.hasKey ? '바꾸려면 새 키를 붙여 넣으세요' : esc(P.keyHint || '') + ' 키를 붙여 넣으세요'}" style="flex:1 1 260px">
                 <button type="button" class="btn ink" data-act="savekey">저장</button>
-                <button type="button" class="btn" data-act="testkey" ${c.hasKey ? '' : 'disabled'}>연결 시험</button>
-                ${c.hasKey ? '<button type="button" class="btn ghost danger" data-act="delkey">키 지우기</button>' : ''}
+                <button type="button" class="btn" data-act="testkey" ${P.hasKey ? '' : 'disabled'}>연결 시험</button>
+                ${P.hasKey ? '<button type="button" class="btn ghost danger" data-act="delkey">키 지우기</button>' : ''}
               </div>
               <div class="row wrap" style="gap:14px;font-size:12px;color:var(--muted)">
-                <span class="row" style="gap:6px"><span class="dot" style="background:${c.hasKey ? 'var(--ready)' : 'var(--line2)'}"></span>${c.hasKey ? '키가 있어요 · 키는 이 맥의 키체인에만 저장해요' : '아직 키가 없어요'}</span>
+                <span class="row" style="gap:6px"><span class="dot" style="background:${P.hasKey ? 'var(--ready)' : 'var(--line2)'}"></span>${P.hasKey ? '키가 있어요 · 키는 이 맥의 키체인에만 저장해요' : '아직 키가 없어요'}</span>
                 <button type="button" class="link" data-act="howkey" style="font-size:12px">키 받는 방법</button></div>
-              <label class="field">모델<select class="select" id="model">${(c.models || []).map((x) => `<option value="${esc(x.id)}" ${x.id === st.model ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label>
-              <div class="faint" style="font-size:12px;line-height:1.6">쓴 만큼 요금이 따로 나가요 (Anthropic 콘솔에서 확인). 이번 달 이 앱에서 ${(c.usage && c.usage.calls) || 0}번 불렀어요 · 보낸 글 ${((c.usage && c.usage.in) || 0).toLocaleString()} 토큰 · 받은 글 ${((c.usage && c.usage.out) || 0).toLocaleString()} 토큰.</div>
-            </div>` : `<div class="tile" style="padding:14px;font-size:13px;line-height:1.7;color:var(--muted)"><b style="color:var(--text)">이렇게 써요</b> — 도우미에서 ‘Claude 에 복사해서 열기’를 누르면 요청문과 고른 자료가 복사되고 Claude 가 열려요. 붙여 넣고 받은 답을 도우미의 ‘Claude 의 답 붙여 넣기’ 칸에 넣으면 설교 기록에 저장할 수 있어요. 자료가 아주 많으면 체크를 몇 개 끄고 보내 주세요.</div>`}
+              <label class="field">모델${P.liveModels ? ' <span class="faint" style="font-weight:600">· ' + esc(N) + ' 에서 받아 온 목록</span>' : ''}<select class="select" id="model">${(P.models || []).map((x) => `<option value="${esc(x.id)}" ${x.id === P.model ? 'selected' : ''}>${esc(x.label)}</option>`).join('')}</select></label>
+              ${ai === 'gemini' ? '<div class="note" style="margin:0"><b>알아 두세요</b> · 결제를 등록하지 않은 무료 구간에서는 보낸 내용(요청문과 고른 PDF 쪽)이 구글 제품 개선에 쓰일 수 있어요. 원하지 않으시면 Google AI Studio 에서 결제를 등록해 유료로 쓰세요. 무료 구간은 1분 · 하루 쓸 수 있는 횟수가 정해져 있어요.</div>' : ''}
+              <div class="faint" style="font-size:12px;line-height:1.6">${ai === 'gemini' ? '무료 구간을 넘으면' : ''}쓴 만큼 요금이 따로 나가요 (${esc(P.company || '')} 결제 화면에서 확인). 이번 달 이 앱에서 ${(P.usage && P.usage.calls) || 0}번 불렀어요 · 보낸 글 ${((P.usage && P.usage.in) || 0).toLocaleString()} 토큰 · 받은 글 ${((P.usage && P.usage.out) || 0).toLocaleString()} 토큰.</div>
+            </div>` : `<div class="tile" style="padding:14px;font-size:13px;line-height:1.7;color:var(--muted)"><b style="color:var(--text)">이렇게 써요</b> — 도우미에서 ‘${N}${aiGap(N)}에 복사해서 열기’를 누르면 요청문과 고른 자료가 복사되고 ${N}${aiGap(N)}가 열려요. 붙여 넣고 받은 답을 도우미의 ‘받은 답 붙여 넣기’ 칸에 넣으면 설교 기록에 저장할 수 있어요. 자료가 아주 많으면 체크를 몇 개 끄고 보내 주세요.</div>`}
             <label class="check"><input type="checkbox" id="showboth" ${st.showBoth ? 'checked' : ''}>도우미 화면에 다른 방법 버튼도 함께 보이기</label>
           </section>
 
@@ -103,21 +111,22 @@ Screens.settings = (() => {
       if (!t) return;
       const d = t.dataset;
       if (d.mode) { await saveSettings({ claudeMode: d.mode }); return render(el); }
+      if (d.ai) { await saveSettings({ ai: d.ai }); return render(el); }
       if (d.appearance) { await saveSettings({ appearance: d.appearance }); return render(el); }
       try {
         switch (d.act) {
           case 'savekey': {
             const k = $('#apikey', el).value.trim();
             if (!k) { toast('키를 붙여 넣어 주세요', { err: true }); return; }
-            S.claude = await api('/api/claude/key', { key: k });
+            S.claude = await api('/api/ai/key', { ai: curAI(), key: k });
             toast('키를 저장했어요. 연결을 시험해 볼게요');
             render(el);
-            try { await api('/api/claude/test', {}); toast('Claude 와 잘 연결됐어요'); } catch (err) { fail(err); }
+            try { await testAI(el); } catch (err) { fail(err); }
             break;
           }
-          case 'testkey': toast('연결을 시험하는 중…'); await api('/api/claude/test', {}); toast('Claude 와 잘 연결됐어요'); render(el); break;
+          case 'testkey': toast('연결을 시험하는 중…'); await testAI(el); break;
           case 'delkey':
-            if (await confirmBox('API 키를 지울까요?', '키체인에서 지워요. 다시 쓰려면 키를 새로 넣어야 해요.', '지우기', true)) { S.claude = await api('/api/claude/key', { key: '' }); render(el); }
+            if (await confirmBox('API 키를 지울까요?', '키체인에서 지워요. 다시 쓰려면 키를 새로 넣어야 해요.', '지우기', true)) { S.claude = await api('/api/ai/key', { ai: curAI(), key: '' }); render(el); }
             break;
           case 'howkey': howKey(); break;
           case 'libfolder': {
@@ -138,23 +147,60 @@ Screens.settings = (() => {
       } catch (err) { fail(err); }
     };
     $('#showboth', el).onchange = (e) => saveSettings({ showBoth: e.target.checked });
-    const model = $('#model', el); if (model) model.onchange = (e) => saveSettings({ model: e.target.value }).then(() => toast('모델을 바꿨어요'));
+    const model = $('#model', el); if (model) model.onchange = async (e) => { await saveSettings({ models: { [curAI()]: e.target.value } }); S.claude = await api('/api/claude'); toast('모델을 바꿨어요'); };
     $$('[data-std]', el).forEach((c) => c.onchange = () => saveSettings({ standards: $$('[data-std]', el).filter((x) => x.checked).map((x) => x.dataset.std) }));
     $('#extra', el).onchange = (e) => saveSettings({ extraPrompt: e.target.value }).then(() => toast('저장했어요'));
     $('#homeplace', el).onchange = (e) => saveSettings({ ui: { homePlace: e.target.value.trim() } }).then(() => toast('저장했어요'));
   }
 
+  async function testAI(el) {
+    const r = await api('/api/ai/test', { ai: curAI() });
+    S.claude = r.state;
+    toast(`${r.name}${aiGap(r.name)}와 잘 연결됐어요 · 모델 ${r.model}`);
+    render(el);
+  }
+
+  // 키가 있으면 그 AI 의 최신 모델 목록을 받아 와요 (한 번 받으면 몇 시간 그대로)
+  let modelsAsked = {};
+  async function refreshModels(el) {
+    const ai = curAI(), P = aiInfo(ai);
+    if (!P.hasKey || P.liveModels || modelsAsked[ai]) return;
+    modelsAsked[ai] = true;
+    try {
+      S.claude = await api('/api/ai/models', { ai });
+      if (S.route.name === 'settings' && !el.contains(document.activeElement)) render(el);
+    } catch (e) { /* 기본 목록 그대로 */ }
+  }
+
+  const HOWKEY = {
+    claude: { title: 'Claude API 키 받는 방법', site: 'console.anthropic.com', steps: [
+      '<b>console.anthropic.com</b> 에 들어가 로그인해요 (지금 쓰시는 Claude 계정으로 들어갈 수 있어요).',
+      '왼쪽 메뉴의 <b>Billing(결제)</b>에서 카드를 등록하고 사용 금액을 조금 충전해요. 설교 준비에 쓰는 정도는 보통 크지 않아요.',
+      '<b>API Keys</b> 메뉴에서 <b>Create Key</b> 를 눌러 이름(예: SermonROAD)을 정하고 키를 만들어요.',
+      '나온 키(<b>sk-ant-</b> 로 시작)를 복사해서 이 화면의 API 키 칸에 붙여 넣고 <b>저장</b>을 눌러요.'],
+      note: '지금 쓰시는 Claude 구독과 API 요금은 따로예요.' },
+    chatgpt: { title: 'ChatGPT(OpenAI) API 키 받는 방법', site: 'platform.openai.com', steps: [
+      '<b>platform.openai.com</b> 에 들어가 로그인해요 (지금 쓰시는 ChatGPT 계정으로 들어갈 수 있어요).',
+      '오른쪽 위 톱니바퀴(설정) › <b>Billing(결제)</b>에서 카드를 등록하고 사용 금액을 조금 충전해요.',
+      '<b>API keys</b> 화면에서 <b>Create new secret key</b> 를 눌러 이름(예: SermonROAD)을 정하고 키를 만들어요.',
+      '나온 키(<b>sk-</b> 로 시작)를 복사해서 이 화면의 API 키 칸에 붙여 넣고 <b>저장</b>을 눌러요. 키는 그 창을 닫으면 다시 볼 수 없으니 바로 붙여 넣으세요.'],
+      note: 'ChatGPT Plus 같은 구독을 하셔도 API 키가 생기지는 않아요. API 요금은 따로 결제해요.' },
+    gemini: { title: '제미나이 API 키 받는 방법', site: 'aistudio.google.com', steps: [
+      '<b>aistudio.google.com</b> 에 들어가 구글 계정으로 로그인해요.',
+      '<b>Get API key</b>(API 키 받기) › <b>Create API key</b>(API 키 만들기)를 눌러요.',
+      '나온 키(<b>AIza</b> 로 시작)를 복사해서 이 화면의 API 키 칸에 붙여 넣고 <b>저장</b>을 눌러요.',
+      '결제를 등록하지 않으면 무료 구간으로 쓸 수 있어요 (1분 · 하루 쓸 수 있는 횟수가 정해져 있어요). 많이 쓰시거나 보낸 내용이 구글 제품 개선에 쓰이지 않게 하려면 결제를 등록하세요.'],
+      note: '무료 구간에서는 보낸 내용이 구글 제품 개선에 쓰일 수 있어요. 제미나이 구독(Google AI Pro 등)과 API 요금은 따로예요.' },
+  };
+
   function howKey() {
+    const ai = curAI(), h = HOWKEY[ai], P = aiInfo(ai);
     modal({
-      title: 'Claude API 키 받는 방법', wide: true,
-      body: `<ol style="margin:0;padding-left:20px;line-height:1.9;font-size:14px">
-        <li><b>console.anthropic.com</b> 에 들어가 로그인해요 (지금 쓰시는 Claude 계정으로 들어갈 수 있어요).</li>
-        <li>왼쪽 메뉴의 <b>Billing(결제)</b>에서 카드를 등록하고 사용 금액을 조금 충전해요. 설교 준비에 쓰는 정도는 보통 크지 않아요.</li>
-        <li><b>API Keys</b> 메뉴에서 <b>Create Key</b> 를 눌러 이름(예: SermonROAD)을 정하고 키를 만들어요.</li>
-        <li>나온 키(<b>sk-ant-</b> 로 시작)를 복사해서 이 화면의 API 키 칸에 붙여 넣고 <b>저장</b>을 눌러요.</li></ol>
-        <div class="note"><b>알아 두세요</b> · 키는 이 맥의 키체인에만 저장되고 다른 곳으로 보내지 않아요. 키가 남에게 알려지면 콘솔에서 지우고 새로 만드세요. 지금 쓰시는 Claude 구독과 API 요금은 따로예요.</div>`,
-      buttons: [{ label: '콘솔 열기', value: 'open' }, { label: '닫기', kind: 'brand', value: null }],
-    }).then((v) => { if (v === 'open') openExternal('https://console.anthropic.com/settings/keys'); });
+      title: h.title, wide: true,
+      body: `<ol style="margin:0;padding-left:20px;line-height:1.9;font-size:14px">${h.steps.map((x) => `<li>${x}</li>`).join('')}</ol>
+        <div class="note"><b>알아 두세요</b> · 키는 이 맥의 키체인에만 저장되고 다른 곳으로 보내지 않아요. 키가 남에게 알려지면 그 사이트에서 지우고 새로 만드세요. ${h.note}</div>`,
+      buttons: [{ label: h.site + ' 열기', value: 'open' }, { label: '닫기', kind: 'brand', value: null }],
+    }).then((v) => { if (v === 'open') openExternal(P.consoleURL || ('https://' + h.site)); });
   }
 
   return { render: (el) => render(el), refresh: () => { const el = $('#main .page'); if (el && !el.contains(document.activeElement)) render(el); } };

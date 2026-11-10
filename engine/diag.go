@@ -163,7 +163,7 @@ func (a *App) handleDiag(w http.ResponseWriter, r *http.Request) {
 	p("시스템     %s · %s · CPU %d개", osVersion(), runtime.GOARCH, runtime.NumCPU())
 	p("지난번     %s", diag.prevEnd)
 	p("앱 위치    %s", env("APP"))
-	p("설정       화면=%s · 자동업데이트=%v · Claude=%s · 모델=%s", s.Appearance, s.AutoUpdate, s.ClaudeMode, s.Model)
+	p("설정       화면=%s · 자동업데이트=%v · 도우미 AI=%s (%s) · 모델=%v", s.Appearance, s.AutoUpdate, s.AI, s.ClaudeMode, s.Models)
 	snap := a.store.snapshot()
 	p("기록       설교 %d편 · 시리즈 %d · 예화 %d · 반복 일정 %d", len(snap["sermons"].([]map[string]any)), len(a.store.data.Series), len(a.store.data.Illus), len(a.store.data.Rules))
 	ls := a.lib.Snapshot()

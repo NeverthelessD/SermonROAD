@@ -155,6 +155,15 @@ try:
     rec("K2 키가 파일로 남지 않음", not_on_disk)
     c = api("/api/claude/key", {"key": ""})
     rec("K3 키 지우기", not c.get("hasKey"))
+    # ChatGPT · 제미나이 키는 자격 증명 관리자에 따로 저장
+    api("/api/ai/key", {"ai": "chatgpt", "key": "sk-proj-smoketest-000000000000000000000000"})
+    c = api("/api/ai/key", {"ai": "gemini", "key": "AIzaSmokeTest0000000000000000000000000"})
+    ks = ",".join(p["id"] + ("=1" if p["hasKey"] else "=0") for p in c["providers"])
+    out = subprocess.run(["cmdkey", "/list"], capture_output=True, text=True, errors="replace").stdout
+    rec("K4 ChatGPT · 제미나이 키를 따로 저장", ks == "claude=0,chatgpt=1,gemini=1" and "OpenAI" in out and "Gemini" in out, ks)
+    api("/api/ai/key", {"ai": "chatgpt", "key": ""})
+    c = api("/api/ai/key", {"ai": "gemini", "key": ""})
+    rec("K5 ChatGPT · 제미나이 키 지우기", not any(p["hasKey"] for p in c["providers"]))
 except Exception as e:
     rec("K1 API 키를 자격 증명 관리자에 저장", False, e)
 

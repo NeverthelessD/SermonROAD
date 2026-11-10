@@ -96,6 +96,17 @@ if [ "$KR" = "True" ]; then
   post /api/claude/key '{"key":""}' > /dev/null
   KD=$(get /api/claude | jq_ "d['hasKey']")
   check "K2 API 키를 지움" test "$KD" = "False"
+  # ChatGPT · 제미나이 키는 키체인에 따로 저장 (Claude 키와 섞이지 않음)
+  post /api/ai/key '{"ai":"chatgpt","key":"sk-proj-smoketest-000000000000000000000000"}' > /dev/null
+  post /api/ai/key '{"ai":"gemini","key":"AIzaSmokeTest0000000000000000000000000"}' > /dev/null
+  KS=$(get /api/ai | jq_ "','.join(p['id'] + ('=1' if p['hasKey'] else '=0') for p in d['providers'])")
+  check "K3 ChatGPT · 제미나이 키를 따로 저장 ($KS)" test "$KS" = "claude=0,chatgpt=1,gemini=1"
+  security find-generic-password -a SermonROAD -s "SermonROAD OpenAI API" > /dev/null 2>&1; K4A=$?
+  KW=$(post /api/ai/key '{"ai":"chatgpt","key":"sk-ant-api03-wrongplace0000000000000000"}' 2>&1)
+  check "K4 다른 AI 의 키를 넣으면 알려 줌 · 키체인 항목 있음" bash -c "echo '$KW' | grep -q 'Claude' && test $K4A = 0"
+  post /api/ai/key '{"ai":"chatgpt","key":""}' > /dev/null; post /api/ai/key '{"ai":"gemini","key":""}' > /dev/null
+  KE=$(get /api/ai | jq_ "sum(1 for p in d['providers'] if p['hasKey'])")
+  check "K5 ChatGPT · 제미나이 키를 지움" test "$KE" = "0"
 else
   info "K1 빌드 서버의 키체인을 쓸 수 없어서 건너뜀 (${KR:-응답 없음})"
 fi

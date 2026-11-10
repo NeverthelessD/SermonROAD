@@ -283,3 +283,7 @@ table.simple th { font-size: 12px; color: var(--muted); font-weight: 700; }
   #side { flex-basis: 196px; }
   .mgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+/* 설교 도우미 AI 고르기 (설정) */
+.ai-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.ai-pick .radio-card{padding:12px 14px;gap:6px}

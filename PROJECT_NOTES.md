@@ -34,6 +34,12 @@
       MSROAD 와 같은 방식: SermonROAD.exe 하나 = 실행기 + 엔진 + 서재 PDF 읽기 도구. 화면은 Edge/Chrome 앱 창(주소창 없음).
       리눅스에서 scripts/build-win.sh 로 만들고, Windows 빌드 서버(.github/workflows/build-win.yml → scripts/ci-win.sh → scripts/smoke-win.py)가
       실제 Windows 에서 시험해 ci-results-win 브랜치에 올려요. 사용 가이드: docs/guide-win.html → docs/SermonROAD_Windows_사용가이드.png
+- [ ] 13. v1.2.0 — 설교 도우미 AI 3종 (2026-11-10, 사용자 요청 "제미나이, chatgpt 도 가능하게, 윈도우용은 업데이트로")
+      engine/ai.go: Claude(Messages + 도구) · ChatGPT(Responses + json_schema) · 제미나이(generateContent + responseSchema) 같은 결과 모양.
+      키는 AI 마다 따로(키체인 / 자격 증명 관리자 'SermonROAD OpenAI API' · 'SermonROAD Gemini API'), 다른 AI 키를 넣으면 알려 줌.
+      모델 목록은 키가 있으면 그 AI 에서 받아 옴(6시간 캐시, 연결 시험 = 모델 목록 받기 · 요금 없음). 기본: gpt-6.1-sol · gemini-3.8-flash.
+      도우미: '다른 AI 로도 받아 보기'(앱에서 바로 / 복사해서 열기) → 결과 위 'OO 의 답 보기'로 이전 답과 번갈아(결과.prev).
+      리눅스 모의 서버로 세 AI 흐름 확인, ai_test.go. 맥 K3~K5 · Windows K4~K5 시험 더함. → 맥 · Windows 둘 다 업데이트로 내보내기
 - [ ] 12. 사용자 Windows 에서 확인: 스캔 PDF 한국어 글자 인식(Windows.Media.Ocr, 한국어 언어 필요), 폴더 고르기 창, 자격 증명 관리자
 - [ ] 9. 사용자 맥에서 확인: 실제 서재 PDF(스캔본 포함) 글자 인식 속도 · 정확도, 실제 API 키로 도우미, 키체인 저장
 
@@ -46,7 +52,8 @@
     engine/store.go        data.json (설교 · 시리즈 · 예화 · 반복 일정 · 휴지통), 백업(Support/backups), 첨부(Support/files/<설교>/)
     engine/bible.go        66권 표(HOLYBIBLE 코드 OLD01~39 · NEW01~27, 확인함) · 본문 읽기 · 겹침 · PDF 글 속 본문 표기 찾기
     engine/library.go      서재 폴더 훑기 · 글자 캐시(Support/library/<id>.json) · 본문으로 찾기
-    engine/helper.go       도우미 요청문 · Claude API(tool 결과) · 키체인(/usr/bin/security) · 이번 달 사용량
+    engine/helper.go       도우미 요청문(세 AI 공통) · 작업(job) · 구독 방식 요청문
+    engine/ai.go           AI 3종 부르기 · 오류 말 바꾸기 · 모델 목록 받기 · AI 별 키(키체인 / 자격 증명 관리자) · 이번 달 사용량(usage.json, Claude 는 'YYYY-MM', 나머지 'YYYY-MM/chatgpt')
     engine/import.go       한꺼번에 등록: 느슨한 읽기(parseLoose: 본문 → 날짜 → 종류 → 절기 → 제목), 머리글 표, .xlsx 읽기, 폴더 훑기, 등록 · 되돌리기
     engine/export.go       엑셀(.xlsx 직접 만듦, ~/Downloads) · /print 인쇄용 목록(브라우저)
     engine/supervise.go · update.go · diag.go · proc_unix.go   MSROAD 와 같은 지킴이 · 업데이트 · 진단
@@ -77,8 +84,10 @@
   부서 · 수련회는 자세한 이름(청년부 · 여름 수련회)을 kindOther 에 적을 수 있고, 화면에는 '부서 · 청년부'로 보여요 (적지 않아도 됨).
 - 성경 본문은 직접 넣기(번역본 저작권 때문에 앱에 성경 본문을 넣지 않음) + **HOLYBIBLE**(https://www.biblenote.kr/read.html?book=NEW06&chapter=8) 링크. 절 단위 주소는 없음.
 - 설교 도우미: 서재 PDF 에서 고른 본문을 다룬 쪽을 찾아 그 자료를 근거로 정리·요약 / 구조 / 묵상 / 설교 개요 / 개혁주의 관점.
-  결과마다 출처(자료 · PDF 쪽), 자료에 없는 내용은 '자료 밖'. Claude 연결은 설정에서 고름(api | copy), 다른 방법 버튼도 보이기(기본 켬).
-  모델 기본 claude-sonnet-5-5 (opus-5-5, haiku-5-5 고를 수 있음). 쪽 번호는 PDF 쪽 순서.
+  결과마다 출처(자료 · PDF 쪽), 자료에 없는 내용은 '자료 밖'. 쓸 AI(Claude · ChatGPT · 제미나이)와 연결 방법(api | copy)을 설정에서 고름,
+  다른 방법 버튼도 보이기(기본 켬). 모델 기본 claude-sonnet-5-5 / gpt-6.1-sol / gemini-3.8-flash. 쪽 번호는 PDF 쪽 순서.
+  제미나이 무료 구간은 보낸 내용이 구글 제품 개선에 쓰일 수 있어 설정 화면에 알림. 설정: ai, models{ai:모델}, model(=Claude, 예전 호환).
+  API: /api/ai · /api/ai/key {ai,key} · /api/ai/test {ai} · /api/ai/models {ai} (/api/claude* 도 그대로, ai 없으면 Claude).
 - 기록은 이 맥 안(~/Library/Application Support/SermonROAD/data.json)에만. 바뀐 날마다 자동 백업(최근 20) + 직접 백업(20) + 되살리기 전 백업.
 - 커밋 작성자: `Nevertheless_D <NeverthelessD@users.noreply.github.com>`
 
@@ -88,6 +97,8 @@
     SERMONROAD_SUPPORT=/tmp/sup SERMONROAD_TOKEN=testtoken SERMONROAD_EXPORT_DIR=/tmp \
       SERMONROAD_UPDATE_URL=http://127.0.0.1:1/none /tmp/sre     # → http://127.0.0.1:47931/?t=testtoken
     가짜 Claude: SERMONROAD_CLAUDE_URL=http://127.0.0.1:47999/v1/messages SERMONROAD_CLAUDE_KEY=sk-ant-test-…
+    가짜 ChatGPT · 제미나이: SERMONROAD_OPENAI_URL=http://127.0.0.1:47999/openai (…/responses · …/models)
+                            SERMONROAD_GEMINI_URL=http://127.0.0.1:47999/gemini (…/models/<모델>:generateContent · …/models)
     (화면 파일은 엔진에 들어가니 web/ 을 고치면 다시 빌드할 것)
 
 ## Windows 판 내보내는 법 (Claude용)

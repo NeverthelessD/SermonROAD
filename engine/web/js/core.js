@@ -320,3 +320,15 @@ const clientErrors = [];
 window.addEventListener('error', (e) => { clientErrors.push(String(e.message) + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno); });
 window.addEventListener('unhandledrejection', (e) => { clientErrors.push('promise: ' + (e.reason && e.reason.message || e.reason)); });
 setInterval(() => { if (clientErrors.length) api('/api/clientlog', { items: clientErrors.splice(0) }).catch(() => {}); }, 5000);
+
+/* 설교 도우미 AI (Claude · ChatGPT · 제미나이) — 자세한 상태는 S.claude (/api/claude) */
+const AI_LIST = [['claude', 'Claude', 'Anthropic'], ['chatgpt', 'ChatGPT', 'OpenAI'], ['gemini', '제미나이', 'Google']];
+const AI_CHAT = { claude: 'https://claude.ai/new', chatgpt: 'https://chatgpt.com/', gemini: 'https://gemini.google.com/app' };
+const AI_COLOR = { claude: '#D97757', chatgpt: '#10A37F', gemini: '#4F7FE8' };
+function aiGap(n) { return /[가-힣]$/.test(n || '') ? '' : ' '; } // ‘Claude 가’ · ‘제미나이가’
+function curAI() { return (S.settings && S.settings.ai) || 'claude'; }
+function aiName(id) { const x = AI_LIST.find((a) => a[0] === (id || curAI())); return x ? x[1] : 'Claude'; }
+function aiInfo(id) {
+  id = id || curAI();
+  return ((S.claude && S.claude.providers) || []).find((p) => p.id === id) || { id, name: aiName(id), hasKey: false, models: [], usage: {} };
+}

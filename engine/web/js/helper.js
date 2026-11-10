@@ -12,6 +12,7 @@ Screens.helper = (() => {
   let R = {};               // 탭 → 결과
   let job = null;           // 지금 만드는 중인 작업
   let pasteOpen = false;
+  let copyAI = '';         // 구독 방식으로 요청문을 복사해 간 AI
   let sermon = null;
   let finding = false;
 
@@ -46,7 +47,7 @@ Screens.helper = (() => {
         <div class="t"><h1>설교 도우미</h1><p class="sub">본문을 정하면 내 서재의 PDF 에서 그 본문을 다룬 부분을 찾아, 그 자료를 근거로 정리해 드려요.</p></div>
         <label class="field" style="flex:0 1 280px">본문<input class="input" id="h-ref" value="${esc(ref)}" placeholder="예: 롬 8:28-30" style="font-size:16px;font-weight:700"></label>
         <button type="button" class="btn brand" data-act="find" style="height:42px">${finding ? '<span class="spinner"></span>' : ''}서재에서 찾기</button>
-        <a class="btn" href="#settings" style="height:42px;font-size:13px;color:var(--muted)"><span class="dot" style="background:${m === 'api' ? (S.claude && S.claude.hasKey ? 'var(--ready)' : 'var(--prep)') : 'var(--sat)'}"></span>Claude · ${m === 'api' ? '앱에서 바로' : '구독(복사)'}</a>
+        <a class="btn" href="#settings" style="height:42px;font-size:13px;color:var(--muted)"><span class="dot" style="background:${m === 'api' ? (aiInfo().hasKey ? 'var(--ready)' : 'var(--prep)') : 'var(--sat)'}"></span>${esc(aiName())} · ${m === 'api' ? '앱에서 바로' : '구독(복사)'}</a>
       </div>
       ${sermon ? `<div class="row wrap tile" style="gap:8px;font-size:13px;background:var(--panel);border:1px solid var(--line)"><span class="muted">연결된 설교</span><b>${fmtDate(sermon.date, true)} ${esc(kindLabel(sermon))}</b><span>${esc(sermon.title || '제목 미정')}</span><span class="grow"></span><a class="link" href="#sermon?id=${sermon.id}">설교 기록 열기</a></div>` : ''}
       <div class="split">
@@ -87,7 +88,7 @@ Screens.helper = (() => {
         <button type="button" class="btn sm grow" data-act="pick" style="border-style:dashed">+ 자료 직접 고르기</button>
         <button type="button" class="btn sm" data-act="library">서재 ${L.total || 0}권</button>
       </div>
-      <p class="faint" style="margin:0;font-size:12px;line-height:1.6">PDF 글자는 맥 안에서 읽어 둬요. Claude 에게는 체크한 부분만 보내요.</p>
+      <p class="faint" style="margin:0;font-size:12px;line-height:1.6">PDF 글자는 맥 안에서 읽어 둬요. AI 에게는 체크한 부분만 보내요.</p>
     </section>
     <section class="card tight"><label class="field">이번에만 덧붙일 말 <span class="faint" style="font-weight:600">(선택)</span>
       <textarea class="textarea" id="h-note" rows="2" style="min-height:56px" placeholder="예: 청년부 대상이라 적용을 구체적으로">${esc(note)}</textarea></label></section>`;
@@ -124,13 +125,14 @@ Screens.helper = (() => {
 
   function drawResult() {
     const box = $('#h-result', el), act = $('#h-actions', el);
+    const N = aiName();
     if (!box) return;
     const res = R[tab];
     const label = (HELPER_TABS.find((x) => x[0] === tab) || [])[1];
     const refShown = (res && res.ref) || ref || '본문';
     let body = '';
     if (job && job.tab === tab && job.status === 'running') {
-      body = `<div class="row" style="gap:12px;padding:30px 0;justify-content:center;color:var(--muted)"><span class="spinner"></span>Claude 가 자료를 읽고 정리하고 있어요… 보통 20초 ~ 1분 걸려요</div>`;
+      body = `<div class="row" style="gap:12px;padding:30px 0;justify-content:center;color:var(--muted)"><span class="spinner"></span>${esc(aiName(job.ai))}${aiGap(aiName(job.ai))}가 자료를 읽고 정리하고 있어요… 보통 20초 ~ 1분 걸려요</div>`;
     } else if (res && res.mode === 'copy') {
       const srcMap = Object.fromEntries((res.sources || []).map((s) => [s.id, s]));
       body = `<div class="md">${mdToHtml(res.text || '', srcMap)}</div>`;
@@ -144,28 +146,30 @@ Screens.helper = (() => {
             <div class="row wrap" style="gap:5px">${(it.sources || []).map((c) => citeHtml(srcMap, c)).join('')}${it.outside ? '<button type="button" class="cite out" title="서재 자료에 없던 내용이에요. 꼭 확인해 주세요.">자료 밖</button>' : ''}</div></div></li>`).join('')}</ol>
         ${res.caution ? `<div class="note"><b>참고</b> · ${esc(res.caution)}</div>` : ''}`;
     } else {
-      body = `<div class="empty" style="text-align:center;padding:30px">${mode() === 'api' ? '‘Claude 로 만들기’를 누르면 고른 자료를 근거로 ' + label + '을(를) 만들어요.' : '‘Claude 에 복사해서 열기’를 누르면 요청문과 고른 자료가 복사되고 Claude 가 열려요. 받은 답을 아래에 붙여 넣으세요.'}</div>`;
+      body = `<div class="empty" style="text-align:center;padding:30px">${mode() === 'api' ? `‘${esc(N)}${aiGap(N)}로 만들기’를 누르면 고른 자료를 근거로 ${label}을(를) 만들어요.` : `‘${esc(N)}${aiGap(N)}에 복사해서 열기’를 누르면 요청문과 고른 자료가 복사되고 ${esc(N)}${aiGap(N)}가 열려요. 받은 답을 아래에 붙여 넣으세요.`}</div>`;
     }
-    const pasteHtml = (mode() === 'copy' || pasteOpen) ? `<label class="field" id="pastebox" style="${pasteOpen || mode() === 'copy' ? '' : 'display:none'}">Claude 의 답 붙여 넣기
-        <textarea class="textarea" id="h-paste" rows="6" placeholder="Claude 에서 받은 답을 그대로 붙여 넣고 ‘붙여 넣은 답 저장’을 누르세요">${res && res.mode === 'copy' ? esc(res.text) : ''}</textarea>
+    const pasteHtml = (mode() === 'copy' || pasteOpen) ? `<label class="field" id="pastebox" style="${pasteOpen || mode() === 'copy' ? '' : 'display:none'}">${esc(aiName(copyAI || curAI()))} 에서 받은 답 붙여 넣기
+        <textarea class="textarea" id="h-paste" rows="6" placeholder="${esc(aiName(copyAI || curAI()))} 에서 받은 답을 그대로 붙여 넣고 ‘붙여 넣은 답 저장’을 누르세요">${res && res.mode === 'copy' ? esc(res.text) : ''}</textarea>
         <span class="row" style="justify-content:flex-end"><button type="button" class="btn sm ink" data-act="paste">붙여 넣은 답 저장</button></span></label>` : '';
     const journal = tab === 'med' ? `<label class="field">나의 묵상 기록 ${sermon ? '' : '<span class="faint" style="font-weight:600">· 설교 기록에 저장할 때 함께 저장돼요</span>'}
         <textarea class="textarea serif" id="h-med" rows="4" placeholder="말씀 앞에서 받은 것을 적어 두세요">${esc(sermon ? sermon.meditation || '' : '')}</textarea></label>` : '';
     box.innerHTML = `<div class="row wrap" style="align-items:baseline;gap:10px"><h2 class="serif" style="font-size:22px;font-weight:700">${esc(refShown)} · ${esc(label)}</h2>
-        <span class="faint" style="font-size:12px">${res && res.at ? (res.mode === 'copy' ? '구독으로 받은 답' : '앱에서 바로') + ' · ' + esc(res.at.replace('T', ' ').slice(0, 16)) : ''}</span></div>
+        <span class="faint" style="font-size:12px">${res && res.at ? aiTag(res.ai) + (res.mode === 'copy' ? '구독으로 받은 답' : '앱에서 바로') + ' · ' + esc(res.at.replace('T', ' ').slice(0, 16)) : ''}</span>
+        ${res && res.prev ? `<button type="button" class="link" data-act="swap" style="font-size:12px" title="같은 본문을 다른 AI 로 받은 답과 번갈아 볼 수 있어요">${esc(aiName(res.prev.ai || 'claude'))}${aiGap(aiName(res.prev.ai || 'claude'))}의 답 보기</button>` : ''}</div>
       ${body}${journal}${pasteHtml}
       <div class="row wrap" style="gap:14px;font-size:12px;color:var(--muted)">
         <span class="row" style="gap:6px"><span class="cite" style="height:18px;display:inline-flex;align-items:center">칼빈 313</span>서재 자료 · 누르면 그 쪽이 열려요</span>
-        <span class="row" style="gap:6px"><span class="cite out" style="height:18px;display:inline-flex;align-items:center">자료 밖</span>Claude 가 덧붙인 내용 · 꼭 확인하세요</span></div>`;
+        <span class="row" style="gap:6px"><span class="cite out" style="height:18px;display:inline-flex;align-items:center">자료 밖</span>AI 가 덧붙인 내용 · 꼭 확인하세요</span></div>`;
     const busy = job && job.status === 'running';
     const both = S.settings.showBoth;
     act.innerHTML = `
       ${res ? `<button type="button" class="btn brand" data-act="saveto" ${busy ? 'disabled' : ''}>설교 기록에 저장</button>` : ''}
       ${res && tab === 'outline' && res.mode !== 'copy' ? `<button type="button" class="btn" data-act="tooutline">중심 명제 · 대지로 옮기기</button>` : ''}
-      ${mode() === 'api' ? `<button type="button" class="btn ${res ? '' : 'brand'}" data-act="run" ${busy ? 'disabled' : ''}>${res ? '다시 만들기' : 'Claude 로 만들기'}</button>` : `<button type="button" class="btn ${res ? '' : 'brand'}" data-act="copy">Claude 에 복사해서 열기</button>`}
+      ${mode() === 'api' ? `<button type="button" class="btn ${res ? '' : 'brand'}" data-act="run" ${busy ? 'disabled' : ''}>${res ? '다시 만들기' : esc(N) + ' 로 만들기'}</button>` : `<button type="button" class="btn ${res ? '' : 'brand'}" data-act="copy">${esc(N)}${aiGap(N)}에 복사해서 열기</button>`}
       ${res ? `<button type="button" class="btn" data-act="copyres">복사</button>` : ''}
+      <button type="button" class="btn" data-act="otherai" ${busy ? 'disabled' : ''} title="같은 본문 · 같은 자료로 다른 AI 의 답도 받아 비교해 보세요">다른 AI 로도 받아 보기</button>
       <span class="grow"></span>
-      ${both ? (mode() === 'api' ? `<button type="button" class="btn ghost" data-act="copy" style="font-size:13px;color:var(--muted)" title="구독 방식: 요청문과 자료를 복사하고 Claude 를 열어요">Claude 에 복사해서 열기</button>`
+      ${both ? (mode() === 'api' ? `<button type="button" class="btn ghost" data-act="copy" style="font-size:13px;color:var(--muted)" title="구독 방식: 요청문과 자료를 복사하고 ${esc(N)}${aiGap(N)}를 열어요">${esc(N)}${aiGap(N)}에 복사해서 열기</button>`
         : `<button type="button" class="btn ghost" data-act="run" style="font-size:13px;color:var(--muted)">앱에서 바로 만들기</button>`) : ''}`;
   }
 
@@ -211,6 +215,8 @@ Screens.helper = (() => {
       case 'saveto': saveTo(); break;
       case 'tooutline': toOutline(); break;
       case 'copyres': copyResult(); break;
+      case 'otherai': otherAI(); break;
+      case 'swap': swapPrev(); break;
     }
   }
   // 체크 상자
@@ -222,56 +228,97 @@ Screens.helper = (() => {
   });
   document.addEventListener('input', (e) => { if (S.route.name === 'helper' && e.target.id === 'h-note') note = e.target.value; });
 
-  function request() {
-    return { ref: ref || ($('#h-ref', el) || {}).value || '', tab, bibleText, sources: pickedSources(), note };
+  function request(ai) {
+    return { ref: ref || ($('#h-ref', el) || {}).value || '', tab, bibleText, sources: pickedSources(), note, ai: ai || curAI() };
   }
 
-  async function run() {
-    if (!S.claude || !S.claude.hasKey) {
-      const r = await modal({ title: 'Claude API 키가 아직 없어요', body: '<p style="margin:0;color:var(--muted);line-height:1.65">앱에서 바로 만들려면 설정 › Claude 연결에서 API 키를 넣어 주세요. 키 없이 지금 쓰시는 Claude 구독으로 하려면 ‘복사해서 열기’를 쓰세요.</p>',
+  const aiTag = (id) => esc(aiName(id || 'claude')) + ' · ';
+
+  // 새 답을 넣을 때, 다른 AI 의 답이 있던 자리면 그 답을 ‘이전 답’으로 남겨 번갈아 볼 수 있게 해요
+  function setResult(t, res) {
+    const old = R[t];
+    if (old) {
+      const o = { ...old }; delete o.prev;
+      res.prev = (old.ai || 'claude') !== (res.ai || 'claude') ? o : old.prev;
+    }
+    R[t] = res;
+  }
+  function swapPrev() {
+    const cur = R[tab];
+    if (!cur || !cur.prev) return;
+    const now = { ...cur }; delete now.prev;
+    R[tab] = { ...cur.prev, prev: now };
+    drawResult();
+    toast(`${aiName(R[tab].ai || 'claude')}${aiGap(aiName(R[tab].ai || 'claude'))}의 답을 보여 드려요 · 저장하면 지금 보이는 답이 앞에 남아요`);
+  }
+
+  async function otherAI() {
+    const others = AI_LIST.filter(([k]) => k !== curAI());
+    const v = await modal({
+      title: '다른 AI 로도 받아 보기',
+      body: `<p style="margin:0 0 12px;color:var(--muted);line-height:1.65">같은 본문 · 같은 자료 · 같은 기준으로 다른 AI 의 답을 받아요. 받은 뒤에는 결과 위의 ‘○○ 의 답 보기’로 번갈아 볼 수 있어요.</p>
+        <div class="col" style="gap:8px">${others.map(([k, n, co]) => { const P = aiInfo(k); return `<div class="tile row wrap" style="gap:10px;padding:12px">
+          <span class="dot" style="background:${AI_COLOR[k]}"></span><b>${n}</b><span class="faint" style="font-size:12px">${co}${P.hasKey ? ' · API 키 있음' : ''}</span><span class="grow"></span>
+          ${P.hasKey ? `<button type="button" class="btn sm brand" data-v="api:${k}">앱에서 바로</button>` : ''}
+          <button type="button" class="btn sm" data-v="copy:${k}">복사해서 ${n} 열기</button></div>`; }).join('')}</div>
+        <p class="faint" style="margin:12px 0 0;font-size:12px">앱에서 바로 받으려면 설정 › 설교 도우미 · AI 연결에서 그 AI 의 API 키를 넣어 주세요.</p>`,
+      buttons: [{ label: '닫기', value: null }],
+      onOpen: (m, close) => m.addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) close(b.dataset.v); }),
+    });
+    if (!v) return;
+    const [how, k] = v.split(':');
+    if (how === 'api') run(k); else copyMode(k);
+  }
+
+  async function run(aiOverride) {
+    const ai = aiOverride || curAI(), N = aiName(ai);
+    if (!aiInfo(ai).hasKey) {
+      const r = await modal({ title: `${N} API 키가 아직 없어요`, body: `<p style="margin:0;color:var(--muted);line-height:1.65">앱에서 바로 만들려면 설정 › 설교 도우미 · AI 연결에서 ${N} API 키를 넣어 주세요. 키 없이 지금 쓰시는 ${N} 구독으로 하려면 ‘복사해서 열기’를 쓰세요.</p>`,
         buttons: [{ label: '닫기', value: '' }, { label: '복사해서 열기', value: 'copy' }, { label: '설정 열기', kind: 'brand', value: 'settings' }] });
-      if (r === 'settings') go('settings'); if (r === 'copy') copyMode();
+      if (r === 'settings') go('settings'); if (r === 'copy') copyMode(ai);
       return;
     }
     if (!request().ref.trim()) { toast('본문을 먼저 적어 주세요', { err: true }); return; }
     if (!pickedSources().length && !(await confirmBox('고른 자료가 없어요', '서재 자료 없이 만들면 모든 내용이 ‘자료 밖’ 내용이 돼요. 그래도 만들까요?', '그래도 만들기'))) return;
     try {
-      job = await api('/api/helper/run', request());
+      job = await api('/api/helper/run', request(ai));
       drawResult();
       const myTab = job.tab;
       while (job && job.status === 'running') {
         await new Promise((r) => setTimeout(r, 1500));
         job = await api('/api/helper/job?id=' + job.id);
       }
-      if (job.status === 'done') { R[myTab] = job.result; toast('정리했어요 · ‘설교 기록에 저장’을 누르면 남겨져요'); }
+      if (job.status === 'done') { setResult(myTab, job.result); toast(`${N}${aiGap(N)}가 정리했어요 · ‘설교 기록에 저장’을 누르면 남겨져요`); }
       else fail(new Error(job.error || '만들지 못했어요'));
     } catch (e) { fail(e); }
     job = null;
     if (S.route.name === 'helper') { const cur = tab; draw(); tab = cur; }
   }
 
-  async function copyMode() {
+  async function copyMode(aiOverride) {
+    const ai = aiOverride || curAI(), N = aiName(ai);
     try {
-      const r = await api('/api/helper/prompt', request());
+      const r = await api('/api/helper/prompt', request(ai));
+      copyAI = ai;
       await copyText(r.text);
       pasteOpen = true;
       R[tab] = R[tab] && R[tab].mode === 'copy' ? R[tab] : R[tab];
       S._copySources = r.sources || [];
       drawResult();
-      const ok = await modal({ title: '요청문을 복사했어요', body: `<p style="margin:0;line-height:1.7;color:var(--muted)">요청문과 고른 자료(${r.chars.toLocaleString()}자)가 복사됐어요.<br>① Claude 가 열리면 새 대화에 <b>붙여 넣기(⌘V)</b> 하고 보내세요.<br>② 받은 답을 복사해서 도우미의 <b>‘Claude 의 답 붙여 넣기’</b> 칸에 붙여 넣으세요.</p>
+      const ok = await modal({ title: '요청문을 복사했어요', body: `<p style="margin:0;line-height:1.7;color:var(--muted)">요청문과 고른 자료(${r.chars.toLocaleString()}자)가 복사됐어요.<br>① ${N}${aiGap(N)}가 열리면 새 대화에 <b>붙여 넣기(⌘V)</b> 하고 보내세요.<br>② 받은 답을 복사해서 도우미의 <b>‘${N}${aiGap(N)}에서 받은 답 붙여 넣기’</b> 칸에 붙여 넣으세요.</p>
         ${r.chars > 150000 ? '<div class="note"><b>자료가 많아요</b> · 한 번에 붙여 넣기 어려우면 자료 몇 개의 체크를 끄고 다시 복사해 주세요.</div>' : ''}`,
-        buttons: [{ label: '닫기', value: false }, { label: 'Claude 열기', kind: 'brand', value: true }] });
-      if (ok) openExternal('https://claude.ai/new');
+        buttons: [{ label: '닫기', value: false }, { label: `${N} 열기`, kind: 'brand', value: true }] });
+      if (ok) openExternal(r.chatURL || AI_CHAT[ai]);
       setTimeout(() => { const p = $('#h-paste'); if (p) p.focus(); }, 100);
     } catch (e) { fail(e); }
   }
 
   function savePaste() {
     const t = ($('#h-paste', el) || {}).value || '';
-    if (!t.trim()) { toast('Claude 의 답을 먼저 붙여 넣어 주세요', { err: true }); return; }
+    if (!t.trim()) { toast('받은 답을 먼저 붙여 넣어 주세요', { err: true }); return; }
     const srcs = (S._copySources && S._copySources.length) ? S._copySources : allSources().filter((s) => !off[s.key]).map((s, i) => ({ id: 'S' + (i + 1), doc: s.doc, name: s.name, from: s.from, to: s.to }));
-    R[tab] = { mode: 'copy', text: t.trim(), sources: srcs, ref: ref, tab, at: new Date().toISOString().slice(0, 16) };
-    pasteOpen = false;
+    setResult(tab, { mode: 'copy', ai: copyAI || curAI(), text: t.trim(), sources: srcs, ref: ref, tab, at: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) });
+    pasteOpen = false; copyAI = '';
     draw();
     toast('붙여 넣은 답을 정리했어요 · ‘설교 기록에 저장’을 누르면 남겨져요');
   }

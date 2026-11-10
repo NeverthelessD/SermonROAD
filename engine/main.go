@@ -32,15 +32,17 @@ var build = "0.0.0-dev"
 var webFiles embed.FS
 
 type Settings struct {
-	Appearance  string         `json:"appearance"` // system | light | dark
-	AutoUpdate  bool           `json:"autoUpdate"`
-	ClaudeMode  string         `json:"claudeMode"` // api | copy
-	ShowBoth    bool           `json:"showBoth"`   // 도우미 화면에 다른 방법 버튼도
-	Model       string         `json:"model"`
-	Standards   []string       `json:"standards"` // 기준 문서 (wcf wlc wsc hc bc cd)
-	ExtraPrompt string         `json:"extraPrompt"`
-	Library     string         `json:"library"` // 서재 폴더
-	UI          map[string]any `json:"ui"`
+	Appearance  string            `json:"appearance"` // system | light | dark
+	AutoUpdate  bool              `json:"autoUpdate"`
+	ClaudeMode  string            `json:"claudeMode"` // api | copy
+	ShowBoth    bool              `json:"showBoth"`   // 도우미 화면에 다른 방법 버튼도
+	Model       string            `json:"model"`      // Claude 모델 (예전 설정과 맞춤)
+	AI          string            `json:"ai"`         // claude | chatgpt | gemini
+	Models      map[string]string `json:"models"`     // AI → 모델
+	Standards   []string          `json:"standards"`  // 기준 문서 (wcf wlc wsc hc bc cd)
+	ExtraPrompt string            `json:"extraPrompt"`
+	Library     string            `json:"library"` // 서재 폴더
+	UI          map[string]any    `json:"ui"`
 }
 
 type App struct {
@@ -221,7 +223,7 @@ func (a *App) shutdownWhy(why string) {
 func (a *App) settingsPath() string { return filepath.Join(a.support, "settings.json") }
 
 func (a *App) loadSettings() {
-	a.settings = Settings{Appearance: "system", AutoUpdate: true, ClaudeMode: "api", ShowBoth: true, Model: helperModels[0]["id"],
+	a.settings = Settings{Appearance: "system", AutoUpdate: true, ClaudeMode: "api", ShowBoth: true, Model: "claude-sonnet-5-5", AI: "claude",
 		Standards:   []string{"wcf", "wlc", "wsc", "hc", "cd"},
 		ExtraPrompt: "성경으로 성경을 해석하고, 그리스도 중심으로 보며, 언약의 흐름 안에서 본문을 읽어 주세요. 자료에 없는 내용은 반드시 따로 표시해 주세요.",
 		UI:          map[string]any{}}
@@ -233,6 +235,13 @@ func (a *App) loadSettings() {
 	}
 	if a.settings.ClaudeMode != "copy" {
 		a.settings.ClaudeMode = "api"
+	}
+	a.settings.AI = validAI(a.settings.AI)
+	if a.settings.Models == nil {
+		a.settings.Models = map[string]string{}
+	}
+	if a.settings.Models["claude"] == "" && a.settings.Model != "" {
+		a.settings.Models["claude"] = a.settings.Model
 	}
 }
 
@@ -250,6 +259,10 @@ func (a *App) Settings() Settings {
 		s.UI[k] = v
 	}
 	s.Standards = append([]string(nil), a.settings.Standards...)
+	s.Models = make(map[string]string, len(a.settings.Models))
+	for k, v := range a.settings.Models {
+		s.Models[k] = v
+	}
 	return s
 }
 
@@ -262,6 +275,8 @@ func (a *App) settingsJSON() map[string]any {
 		"claudeMode":  s.ClaudeMode,
 		"showBoth":    s.ShowBoth,
 		"model":       s.Model,
+		"ai":          s.AI,
+		"models":      s.Models,
 		"standards":   s.Standards,
 		"extraPrompt": s.ExtraPrompt,
 		"library":     s.Library,
@@ -295,8 +310,24 @@ func (a *App) handleSettings(w http.ResponseWriter, r *http.Request) {
 				}
 			case "showBoth":
 				json.Unmarshal(v, &a.settings.ShowBoth)
-			case "model":
+			case "model": // 예전 화면: Claude 모델
 				json.Unmarshal(v, &a.settings.Model)
+				a.settings.Models["claude"] = a.settings.Model
+			case "ai":
+				json.Unmarshal(v, &a.settings.AI)
+				a.settings.AI = validAI(a.settings.AI)
+			case "models":
+				var mm map[string]string
+				if json.Unmarshal(v, &mm) == nil {
+					for kk, vv := range mm {
+						if providerByID(kk) != nil {
+							a.settings.Models[kk] = vv
+							if kk == "claude" {
+								a.settings.Model = vv
+							}
+						}
+					}
+				}
 			case "standards":
 				json.Unmarshal(v, &a.settings.Standards)
 			case "extraPrompt":
@@ -454,9 +485,13 @@ func (a *App) routes() http.Handler {
 	api("/api/helper/run", a.handleHelperRun)
 	api("/api/helper/job", a.handleHelperJob)
 	api("/api/helper/prompt", a.handleHelperPrompt)
-	api("/api/claude", a.handleClaudeState)
-	api("/api/claude/key", a.handleClaudeKey)
-	api("/api/claude/test", a.handleClaudeTest)
+	api("/api/claude", a.handleAIState) // 예전 이름 그대로 (세 AI 모두)
+	api("/api/claude/key", a.handleAIKey)
+	api("/api/claude/test", a.handleAITest)
+	api("/api/ai", a.handleAIState)
+	api("/api/ai/key", a.handleAIKey)
+	api("/api/ai/test", a.handleAITest)
+	api("/api/ai/models", a.handleAIModels)
 
 	// 업데이트
 	api("/api/update/check", func(w http.ResponseWriter, r *http.Request) {
