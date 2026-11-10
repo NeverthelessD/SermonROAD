@@ -1,10 +1,12 @@
 {
-  "version": "1.1.1",
+  "version": "1.2.0",
   "date": "2026-11-10",
-  "zip": "SermonROAD-win-1.1.1.zip",
-  "sha256": "08d10df88c04761c20a249d971fa71c108defe3e1f0c9ca1da7953cd05051130",
-  "size": 12794897,
+  "zip": "SermonROAD-win-1.2.0.zip",
+  "sha256": "4becaedc8618db1477ffed799d9eb37c4bfbd37466a588b1a95a9a3728219ab8",
+  "size": 12848049,
   "notes": [
-    "Windows 판을 처음 내놓았어요"
+    "설교 도우미에서 Claude 말고 ChatGPT · 제미나이도 고를 수 있어요 (설정 › 설교 도우미 · AI 연결)",
+    "‘다른 AI 로도 받아 보기’ — 같은 본문 · 같은 자료로 다른 AI 의 답을 받아 번갈아 비교해 보세요",
+    "AI 마다 API 키를 따로 넣고, 그 AI 에서 지금 쓸 수 있는 모델 목록을 받아 와요"
   ]
 }

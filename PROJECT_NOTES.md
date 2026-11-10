@@ -34,12 +34,13 @@
       MSROAD 와 같은 방식: SermonROAD.exe 하나 = 실행기 + 엔진 + 서재 PDF 읽기 도구. 화면은 Edge/Chrome 앱 창(주소창 없음).
       리눅스에서 scripts/build-win.sh 로 만들고, Windows 빌드 서버(.github/workflows/build-win.yml → scripts/ci-win.sh → scripts/smoke-win.py)가
       실제 Windows 에서 시험해 ci-results-win 브랜치에 올려요. 사용 가이드: docs/guide-win.html → docs/SermonROAD_Windows_사용가이드.png
-- [ ] 13. v1.2.0 — 설교 도우미 AI 3종 (2026-11-10, 사용자 요청 "제미나이, chatgpt 도 가능하게, 윈도우용은 업데이트로")
+- [x] 13. v1.2.0 출시 — 설교 도우미 AI 3종 (2026-11-10, 사용자 요청 "제미나이, chatgpt 도 가능하게, 윈도우용은 업데이트로")
       engine/ai.go: Claude(Messages + 도구) · ChatGPT(Responses + json_schema) · 제미나이(generateContent + responseSchema) 같은 결과 모양.
       키는 AI 마다 따로(키체인 / 자격 증명 관리자 'SermonROAD OpenAI API' · 'SermonROAD Gemini API'), 다른 AI 키를 넣으면 알려 줌.
       모델 목록은 키가 있으면 그 AI 에서 받아 옴(6시간 캐시, 연결 시험 = 모델 목록 받기 · 요금 없음). 기본: gpt-6.1-sol · gemini-3.8-flash.
       도우미: '다른 AI 로도 받아 보기'(앱에서 바로 / 복사해서 열기) → 결과 위 'OO 의 답 보기'로 이전 답과 번갈아(결과.prev).
-      리눅스 모의 서버로 세 AI 흐름 확인, ai_test.go. 맥 K3~K5 · Windows K4~K5 시험 더함. → 맥 · Windows 둘 다 업데이트로 내보내기
+      리눅스 모의 서버로 세 AI 흐름 확인, ai_test.go. 맥 39개 · Windows 시험 통과(K3~K5 더함) → 맥 · Windows 둘 다 업데이트로 내보냄.
+      남은 확인: 실제 ChatGPT · 제미나이 키로 도우미 (모델 이름은 2026-11 기준 추정, 키가 있으면 받아 온 목록이 우선)
 - [ ] 12. 사용자 Windows 에서 확인: 스캔 PDF 한국어 글자 인식(Windows.Media.Ocr, 한국어 언어 필요), 폴더 고르기 창, 자격 증명 관리자
 - [ ] 9. 사용자 맥에서 확인: 실제 서재 PDF(스캔본 포함) 글자 인식 속도 · 정확도, 실제 API 키로 도우미, 키체인 저장
 
