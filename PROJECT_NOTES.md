@@ -30,6 +30,11 @@
       engine/import.go · web/js/import.js (#import, 설교 기록 머리 버튼 · 설교 지도에 30편 미만일 때 안내 줄)
       표 붙여 넣기(탭 · | · ' / ' · 한 줄 통째) / 엑셀 .xlsx(서식 파일 받기, 보기 줄 건너뜀) / 원고 파일 폴더(파일 이름 → 날짜 · 종류 · 본문 · 절기 · 제목, 원고 첨부)
       → 미리 보기 표에서 고치기(이미 있는 기록과 겹치면 꺼 둠, 날짜 없으면 등록 못 함) → 등록 전 before-import 백업 → 바로 되돌리기(Extra.import 묶음 번호)
+- [x] 11. Windows 판 (2026-11-10, 사용자 요청 "윈도우용도 만들어줘")
+      MSROAD 와 같은 방식: SermonROAD.exe 하나 = 실행기 + 엔진 + 서재 PDF 읽기 도구. 화면은 Edge/Chrome 앱 창(주소창 없음).
+      리눅스에서 scripts/build-win.sh 로 만들고, Windows 빌드 서버(.github/workflows/build-win.yml → scripts/ci-win.sh → scripts/smoke-win.py)가
+      실제 Windows 에서 시험해 ci-results-win 브랜치에 올려요. 사용 가이드: docs/guide-win.html → docs/SermonROAD_Windows_사용가이드.png
+- [ ] 12. 사용자 Windows 에서 확인: 스캔 PDF 한국어 글자 인식(Windows.Media.Ocr, 한국어 언어 필요), 폴더 고르기 창, 자격 증명 관리자
 - [ ] 9. 사용자 맥에서 확인: 실제 서재 PDF(스캔본 포함) 글자 인식 속도 · 정확도, 실제 API 키로 도우미, 키체인 저장
 
 ## 구조
@@ -48,6 +53,12 @@
     engine/web/            index.html · css/app.css(토큰) · css/gowun.css(고운바탕 OFL)
                            js/core.js(api · 상태 S · 절기 계산 · 모달 · 길 찾기) data.js(요리문답 · 신앙고백 · 색)
                            map · calendar · records · sermon · series · confess · illus · helper · stats · settings · main
+    Windows 판             engine/launcher_windows.go (실행기: 자기를 %LOCALAPPDATA%\SermonROAD\bin\sermonroad-engine.exe 로 복사해 --engine 으로 켜고 앱 창 열기)
+                           proc_windows.go · cred_windows.go(API 키 → 자격 증명 관리자, wincred) · folder_windows.go(/api/choose-folder, 폴더 선택 창)
+                           pdftext_pdfium.go (SermonROAD.exe --pdftext <PDF> <결과.json>: PDFium WebAssembly + wazero, 컴파일 캐시 Support/pdfium-cache)
+                           ocr_windows.go (글자 거의 없는 쪽 → 200dpi 그림 → PowerShell 의 Windows.Media.Ocr, 한국어 → 영어 순)
+                           web/js/win.js (Windows 에서만: 화면 문구 맥 말 → Windows 말, 폴더 고르기)
+                           창을 닫으면 엔진은 10분 뒤 끝나요(서재 읽는 중이면 기다림). 화면 아래 종료 버튼 없음 — Edge 창이 곧 앱.
     scripts/               build-mac · ci-mac · smoke-mac · release · publish-download · feed · icon · guide · make-test-pdfs
     scripts/testdata/      시험용 서재 PDF (글자 PDF 2개 + 스캔 PDF 1개)
 
@@ -78,6 +89,13 @@
       SERMONROAD_UPDATE_URL=http://127.0.0.1:1/none /tmp/sre     # → http://127.0.0.1:47931/?t=testtoken
     가짜 Claude: SERMONROAD_CLAUDE_URL=http://127.0.0.1:47999/v1/messages SERMONROAD_CLAUDE_KEY=sk-ant-test-…
     (화면 파일은 엔진에 들어가니 web/ 을 고치면 다시 빌드할 것)
+
+## Windows 판 내보내는 법 (Claude용)
+
+- 엔진을 고치면 맥 · Windows 빌드 서버가 둘 다 돌아요. Windows 결과: `git fetch origin +refs/heads/ci-results-win:refs/remotes/origin/ci-results-win` (status.json, smoke/results.txt, smoke/shot-*.png)
+- `scripts/build-win.sh --notes "바뀐 점"` → releases/SermonROAD-win-<v>.zip · latest-win.json · download/SermonROAD-Windows.zip → 커밋 · 푸시
+- go-pdfium 은 v1.17.2 (그 뒤 버전은 Go 1.25+ 가 필요해서 맥 빌드 서버의 Go 1.24 와 맞지 않아요)
+- 서명 없는 exe 라서 처음 실행 때 'Windows의 PC 보호' → 추가 정보 → 실행 (가이드에 있어요)
 
 ## 업데이트 내보내는 법 (Claude용)
 
