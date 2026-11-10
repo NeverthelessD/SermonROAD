@@ -102,8 +102,8 @@ if [ "$KR" = "True" ]; then
   KS=$(get /api/ai | jq_ "','.join(p['id'] + ('=1' if p['hasKey'] else '=0') for p in d['providers'])")
   check "K3 ChatGPT · 제미나이 키를 따로 저장 ($KS)" test "$KS" = "claude=0,chatgpt=1,gemini=1"
   security find-generic-password -a SermonROAD -s "SermonROAD OpenAI API" > /dev/null 2>&1; K4A=$?
-  KW=$(post /api/ai/key '{"ai":"chatgpt","key":"sk-ant-api03-wrongplace0000000000000000"}' 2>&1)
-  check "K4 다른 AI 의 키를 넣으면 알려 줌 · 키체인 항목 있음" bash -c "echo '$KW' | grep -q 'Claude' && test $K4A = 0"
+  KW=$(curl -s -m 30 -X POST -H "x-token: $(tok)" -H 'content-type: application/json' --data '{"ai":"chatgpt","key":"sk-ant-api03-wrongplace0000000000000000"}' "$(API)/api/ai/key")
+  check "K4 다른 AI 의 키를 넣으면 알려 줌 · 키체인 항목 있음 (${KW:0:80})" bash -c "printf '%s' \"\$1\" | grep -q 'Claude' && test $K4A = 0" _ "$KW"
   post /api/ai/key '{"ai":"chatgpt","key":""}' > /dev/null; post /api/ai/key '{"ai":"gemini","key":""}' > /dev/null
   KE=$(get /api/ai | jq_ "sum(1 for p in d['providers'] if p['hasKey'])")
   check "K5 ChatGPT · 제미나이 키를 지움" test "$KE" = "0"
