@@ -389,7 +389,7 @@ func monthUsage(support string) map[string]int {
 	return map[string]int{"calls": 0, "in": 0, "out": 0}
 }
 
-// ---------------------------------------------------------------- API 키 (맥 키체인)
+// ---------------------------------------------------------------- API 키 (맥 키체인 · Windows 자격 증명 관리자)
 
 const keychainService = "SermonROAD Claude API"
 
@@ -398,6 +398,9 @@ var reKey = regexp.MustCompile(`^[A-Za-z0-9_\-]{20,300}$`)
 func claudeKey(support string) string {
 	if k := env("CLAUDE_KEY"); k != "" {
 		return k
+	}
+	if isWindows {
+		return winCredGet(keychainService)
 	}
 	if runtime.GOOS == "darwin" {
 		out, err := exec.Command("/usr/bin/security", "find-generic-password", "-a", "SermonROAD", "-s", keychainService, "-w").Output()
@@ -412,7 +415,9 @@ func claudeKey(support string) string {
 
 func setClaudeKey(support, key string) error {
 	if key == "" {
-		if runtime.GOOS == "darwin" {
+		if isWindows {
+			winCredDelete(keychainService)
+		} else if runtime.GOOS == "darwin" {
 			exec.Command("/usr/bin/security", "delete-generic-password", "-a", "SermonROAD", "-s", keychainService).Run()
 		} else {
 			os.Remove(filepath.Join(support, "claude-key"))
@@ -421,6 +426,16 @@ func setClaudeKey(support, key string) error {
 	}
 	if !reKey.MatchString(key) {
 		return errors.New("API 키 모양이 아니에요. sk-ant- 로 시작하는 키를 그대로 붙여 넣어 주세요")
+	}
+	if isWindows {
+		// Windows 자격 증명 관리자에 저장해요 (맥의 키체인과 같은 곳)
+		if err := winCredSet(keychainService, key); err != nil {
+			return fmt.Errorf("Windows 자격 증명 관리자에 저장하지 못했어요: %v", err)
+		}
+		if claudeKey(support) != key {
+			return errors.New("자격 증명 관리자에 저장했지만 다시 읽지 못했어요")
+		}
+		return nil
 	}
 	if runtime.GOOS == "darwin" {
 		// 키를 명령줄에 드러내지 않도록 security 의 입력으로 넘겨요

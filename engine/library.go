@@ -5,7 +5,8 @@ package main
 //   쪽마다 성경 본문 표기(롬 8:28, 8장 28절 …)를 찾아 둬요. 본문을 정하면 그 본문을 다룬 쪽들을 찾아 줘요.
 //
 //   글자 읽기: 맥에서는 앱 안의 작은 도구(sermonroad-pdftext)가 PDFKit 과 맥의 글자 인식(Vision)으로 읽어요.
-//   (스캔한 PDF 도 읽을 수 있어요.) 시험용 리눅스에서는 pdftotext 를 써요.
+//   (스캔한 PDF 도 읽을 수 있어요.) Windows 에서는 SermonROAD.exe --pdftext (PDFium + Windows 글자 인식, pdftext_pdfium.go),
+//   시험용 리눅스에서는 pdftotext (SERMONROAD_PDFIUM=1 이면 PDFium) 를 써요.
 
 import (
 	"bufio"
@@ -252,6 +253,15 @@ func (l *Library) extract(d *LibDoc) (*pdfCache, error) {
 		if err := l.runPDFHelper(d, bin, []string{d.Path, out}); err != nil {
 			return nil, err
 		}
+	case runtime.GOOS != "darwin" && (isWindows || env("PDFIUM") == "1"):
+		// Windows: 이 프로그램 안의 PDF 읽기 도구(PDFium + Windows 글자 인식)를 따로 켜서 읽어요
+		self, err := os.Executable()
+		if err != nil {
+			return nil, errors.New("PDF 읽기 도구를 찾지 못했어요. 앱을 다시 실행해 주세요")
+		}
+		if err := l.runPDFHelper(d, self, []string{"--pdftext", d.Path, out}); err != nil {
+			return nil, err
+		}
 	default:
 		pt, err := exec.LookPath("pdftotext")
 		if err != nil {
@@ -343,6 +353,12 @@ func cleanText(s string) string {
 	s = reSpaces.ReplaceAllString(s, " ")
 	s = reManyNL.ReplaceAllString(s, "\n\n")
 	return strings.TrimSpace(s)
+}
+
+func (l *Library) Busy() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.busy
 }
 
 func (l *Library) Snapshot() map[string]any {

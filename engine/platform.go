@@ -2,5 +2,5 @@ package main
 
 import "runtime"
 
-// SermonROAD 는 맥(Apple Silicon) 전용이에요. 업데이트 코드가 Windows 경우도 품고 있어서 남겨 둬요.
+// 맥(Apple Silicon) 판과 Windows 판(engine/launcher_windows.go · pdftext_pdfium.go · ocr_windows.go)이 같은 엔진을 써요.
 var isWindows = runtime.GOOS == "windows"

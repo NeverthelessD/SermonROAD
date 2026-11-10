@@ -73,6 +73,15 @@ func env(k string) string { return os.Getenv("SERMONROAD_" + k) }
 const defaultPort = 47931
 
 func main() {
+	// 서재 PDF 글자 읽기 도구 (Windows · 리눅스): SermonROAD.exe --pdftext <PDF> <결과.json>
+	if len(os.Args) > 1 && os.Args[1] == "--pdftext" {
+		os.Exit(pdfTextMain(os.Args[2:]))
+	}
+	// Windows: SermonROAD.exe 를 더블클릭하면 실행기, --engine 이면 엔진
+	if isWindows && launcherMode() {
+		runLauncher()
+		return
+	}
 	log.SetFlags(log.LstdFlags)
 	home, _ := os.UserHomeDir()
 	support := env("SUPPORT")
@@ -80,6 +89,8 @@ func main() {
 		switch runtime.GOOS {
 		case "darwin":
 			support = filepath.Join(home, "Library", "Application Support", "SermonROAD")
+		case "windows":
+			support = filepath.Join(os.Getenv("LOCALAPPDATA"), "SermonROAD")
 		default:
 			support = filepath.Join(home, ".sermonroad")
 		}
@@ -168,9 +179,13 @@ func (a *App) idleWatcher() {
 	if nativeShell() {
 		return
 	}
+	limit := idleLimit
+	if isWindows {
+		limit = 10 * time.Minute // 창을 닫으면 10분 뒤 엔진도 끝나요 (창이 열려 있으면 화면이 계속 연락해요)
+	}
 	for range time.Tick(15 * time.Second) {
 		idle := time.Since(started) - time.Duration(a.lastSeen.Load())
-		if idle > idleLimit && !a.upd.Busy() {
+		if idle > limit && !a.upd.Busy() && !a.lib.Busy() {
 			log.Printf("idle for %s, shutting down", idle.Round(time.Second))
 			a.shutdownWhy("오래 쉼")
 		}
@@ -465,6 +480,19 @@ func (a *App) routes() http.Handler {
 			return
 		}
 		writeJSON(w, map[string]any{"ok": true})
+	})
+	api("/api/choose-folder", func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Prompt string `json:"prompt"`
+			Start  string `json:"start"`
+		}
+		readJSON(r, &in)
+		p, ok, err := chooseFolderNative(in.Prompt, in.Start)
+		if err != nil {
+			jsonError(w, 500, "폴더 고르기 창을 열지 못했어요: "+err.Error())
+			return
+		}
+		writeJSON(w, map[string]any{"ok": ok, "path": p})
 	})
 	api("/api/open-url", func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
