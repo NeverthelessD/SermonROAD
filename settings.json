@@ -1,0 +1,22 @@
+{
+  "appearance": "light",
+  "autoUpdate": false,
+  "claudeMode": "api",
+  "showBoth": true,
+  "model": "claude-sonnet-5-5",
+  "ai": "claude",
+  "models": {
+    "claude": "claude-sonnet-5-5"
+  },
+  "standards": [
+    "wcf",
+    "wsc",
+    "hc",
+    "cd"
+  ],
+  "extraPrompt": "성경으로 성경을 해석하고, 그리스도 중심으로 보며, 언약의 흐름 안에서 본문을 읽어 주세요. 자료에 없는 내용은 반드시 따로 표시해 주세요.",
+  "library": "/Users/runner/SermonROAD-test-library",
+  "ui": {
+    "homePlace": "본 교회"
+  }
+}

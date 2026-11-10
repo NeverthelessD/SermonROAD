@@ -1,0 +1,2 @@
+d47acfe59584876f29d5c15324a4bcf007ed660d7da523869caf6c6a151182a6  /Users/runner/work/SermonROAD/SermonROAD/ci-out/SermonROAD-1.2.0.zip
+87173627d55b01b364975bef8e4e5fa392ac1143858a732cad4ba030152acd6f  /Users/runner/work/SermonROAD/SermonROAD/ci-out/SermonROAD-first-install.zip
